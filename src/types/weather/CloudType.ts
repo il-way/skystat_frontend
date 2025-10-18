@@ -1,0 +1,1 @@
+export type CloudType = "TCU" | "CB" | "NONE";

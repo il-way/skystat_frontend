@@ -1,0 +1,1 @@
+export type Comparison = "LT" | "LTE" | "EQ" | "NE" | "GT" | "GTE";

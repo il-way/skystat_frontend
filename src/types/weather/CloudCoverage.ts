@@ -1,0 +1,1 @@
+export type CloudCoverage = "FEW" | "SCT" | "BKN" | "OVC" | "VV" | "SKC" | "CLR" | "NSC" | "NCD";

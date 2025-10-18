@@ -1,0 +1,1 @@
+export type WeatherDescriptor = "BC" | "BL" | "DR" | "DL" | "FZ" | "MI" | "PR" | "SH" | "TS" | "VC";

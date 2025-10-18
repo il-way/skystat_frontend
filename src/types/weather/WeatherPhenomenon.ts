@@ -1,0 +1,1 @@
+export type WeatherPhenomenon = "DZ" | "RA" | "SN" | "SG" | "IC" | "PL" | "GR" | "GS" | "UP" | "BR" | "FG" | "FU" | "VA" | "DU" | "SA" | "HZ" | "PY" | "PO" | "SQ" | "FC" | "SS" | "DS" | "WS" | "NSW";

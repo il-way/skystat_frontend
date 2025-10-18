@@ -1,0 +1,1 @@
+export type MetricField = "ceiling" | "visibility" | "windpeak" | "windspeed" | "altimeter";
