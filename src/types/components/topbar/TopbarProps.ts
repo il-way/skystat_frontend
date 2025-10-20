@@ -6,6 +6,6 @@ export type TopbarProps = {
   to: string;
   setTo: (v: string) => void;
   loading: boolean;
-  qFetching: boolean;
+  isFetching: boolean;
   onFetch: () => void;
 };

@@ -1,5 +1,7 @@
+import type { MonthValue } from "@/types/dates/Dates";
+
 export type MonthlyCount = {
   year: number;
-  month: number;
+  month: MonthValue;
   count: number;
 };

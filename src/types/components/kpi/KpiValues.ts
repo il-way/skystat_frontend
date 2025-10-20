@@ -1,6 +1,6 @@
 export type KpiValues = {
   sampleSize: number;
-  avgVisibility: number;
-  avgWindSpeed: number;
-  avgCeiling: number;
+  avgVisibilityM: number;
+  avgWindSpeedKt: number;
+  avgCeilingFt: number;
 };

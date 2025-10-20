@@ -1,3 +1,5 @@
+import type { MonthIdx, MonthShortName, MonthValue } from "@/types/dates/Dates";
+
 export function toLocalInput(dt: number | string | Date): string {
   const d = new Date(dt);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -11,4 +13,12 @@ export function toLocalInput(dt: number | string | Date): string {
 
 export function localInputToISO(local: string): string {
   return new Date(local).toISOString();
+}
+
+export const monthValues: MonthValue[] = [1,2,3,4,5,6,7,8,9,10,11,12];
+export const monthIndex: MonthIdx[] = [0,1,2,3,4,5,6,7,8,9,10,11];
+export const monthShortName: MonthShortName[] = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+export function monthShortNameFrom(monthValue: number) {
+  return monthShortName[monthValue-1];
 }

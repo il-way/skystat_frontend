@@ -1,3 +1,4 @@
+import Hint from "../commin/Hint";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function KpiCard({ title, value, hint }: { title: string; value: string; hint?: string }) {
@@ -14,6 +15,3 @@ export default function KpiCard({ title, value, hint }: { title: string; value: 
   )
 }
 
-function Hint({ text }: { text?: string }) {
-  return text ? <div className="text-xs text-muted-foreground mt-1">{text}</div> : null;
-}

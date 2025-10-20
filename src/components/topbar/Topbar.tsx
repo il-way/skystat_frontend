@@ -7,7 +7,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 
 export default function Topbar(props: TopbarProps): JSX.Element {
-  const { icao, setIcao, from, setFrom, to, setTo, loading, qFetching, onFetch } = props;
+  const { icao, setIcao, from, setFrom, to, setTo, loading, isFetching, onFetch } = props;
   
   return (
     <div className="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -48,10 +48,10 @@ export default function Topbar(props: TopbarProps): JSX.Element {
           <div className="ml-auto">
             <Button
               onClick={onFetch}
-              disabled={loading || qFetching}
+              disabled={loading || isFetching}
               className="rounded-2xl"
             >
-              {loading || qFetching ? "Loading..." : "Fetch"}
+              {loading || isFetching ? "Loading..." : "Fetch"}
             </Button>
           </div>
         </div>

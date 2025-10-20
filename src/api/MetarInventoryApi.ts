@@ -3,7 +3,7 @@ import type { DatasetCoverage } from "@/types/api/response/common/DatasetCoverag
 
 export class MetarInventory {
 
-  static host = "http://locahost:8080";
+  static host = "http://localhost:8080";
 
   static async fetchDataCoverage(icao: string) {
     const uri = MetarInventory.host + buildMetarInventoryURL(icao);
