@@ -1,6 +1,7 @@
 import type { WindLineProps } from "@/types/components/charts/WindLineProps";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { JSX } from "react";
 
 export default function WindLineChart(props: WindLineProps): JSX.Element {
   const { data } = props;
@@ -19,7 +20,7 @@ export default function WindLineChart(props: WindLineProps): JSX.Element {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="t" />
             <YAxis />
-            <Tooltip />
+            <Tooltip formatter={(value: number, name: string) => [`${value} KT`, name]}/>
             <Line type="monotone" dataKey="wind" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
