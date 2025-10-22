@@ -26,8 +26,8 @@ export function localInputToISO(local: string): string {
 
 export const monthValues: MonthValue[] = [1,2,3,4,5,6,7,8,9,10,11,12];
 export const monthIndex: MonthIdx[] = [0,1,2,3,4,5,6,7,8,9,10,11];
-export const monthShortName: MonthShortName[] = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+export const monthShortNames: MonthShortName[] = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
 export function monthShortNameFrom(monthValue: number) {
-  return monthShortName[monthValue-1];
+  return monthShortNames[monthValue-1];
 }

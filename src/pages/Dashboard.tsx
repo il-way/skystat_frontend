@@ -106,86 +106,80 @@ export default function Dashboard() {
   // }, [obs, rows])
 
   return (
-    <div className="flex h-screen w-full bg-background text-foreground">
-      {/* Sidebar */}
-      <SidebarNav />
+    <>
+      {/* Topbar / Filters */}
+      <Topbar
+        icao={icao}
+        setIcao={setIcao}
+        from={from}
+        setFrom={setFrom}
+        to={to}
+        setTo={setTo}
+        loading={loading}
+        isFetching={avgIsFetching}
+        onFetch={handleFetch}
+      />
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col">
-        {/* Topbar / Filters */}
-        <Topbar
+      {/* Content */}
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Breadcrumb / Context */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Analytics</span>
+            <span>/</span>
+            <span className="text-foreground">Dashboard</span>
+          </div>
+          <Badge variant="secondary">Preview</Badge>
+        </div>
+
+        {/* KPIs */}
+        <KpiCardGrid kpis={kpis} />
+
+        {/* Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <WindLineChart data={sampleWindLineData} />
+        </motion.div>
+
+        {/* Table */}
+        <DashboardTable
           icao={icao}
-          setIcao={setIcao}
           from={from}
-          setFrom={setFrom}
           to={to}
-          setTo={setTo}
-          loading={loading}
-          isFetching={avgIsFetching}
-          onFetch={handleFetch}
+          rows={tableRows || []}
         />
 
-        {/* Content */}
-        <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-          {/* Breadcrumb / Context */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Analytics</span>
-              <span>/</span>
-              <span className="text-foreground">Dashboard</span>
-            </div>
-            <Badge variant="secondary">Preview</Badge>
+        <Separator />
+
+        {/* Next steps */}
+        <div className="text-sm text-muted-foreground leading-6">
+          <div className="font-medium text-foreground mb-1">
+            Next steps (실전 적용 가이드)
           </div>
-
-          {/* KPIs */}
-          <KpiCardGrid kpis={kpis} />
-
-          {/* Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <WindLineChart data={sampleWindLineData} />
-          </motion.div>
-
-          {/* Table */}
-          <DashboardTable
-            icao={icao}
-            from={from}
-            to={to}
-            rows={tableRows || []}
-          />
-
-          <Separator />
-
-          {/* Next steps */}
-          <div className="text-sm text-muted-foreground leading-6">
-            <div className="font-medium text-foreground mb-1">
-              Next steps (실전 적용 가이드)
-            </div>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                데이터 연동: TanStack Query로 <code>/metar/statistic/*</code>{" "}
-                조회 훅 구성, icao/from/to를 쿼리키에 반영.
-              </li>
-              <li>
-                컴포넌트 분리: Sidebar / Topbar / Kpi / Charts / Table 폴더화 및
-                Storybook 권장.
-              </li>
-              <li>
-                테마: 브랜드 기본색(#1D97DB)을 Tailwind theme primary에 바인딩.
-              </li>
-              <li>
-                접근성: 키보드 포커스, 대비(AAA 근접), 로딩 라이브리전 확인.
-              </li>
-              <li>
-                페이지: Dashboard / METAR Search / Statistics / Crosswind /
-                Stations / Settings.
-              </li>
-            </ul>
-          </div>
-        </main>
-      </div>
-    </div>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>
+              데이터 연동: TanStack Query로 <code>/metar/statistic/*</code> 조회
+              훅 구성, icao/from/to를 쿼리키에 반영.
+            </li>
+            <li>
+              컴포넌트 분리: Sidebar / Topbar / Kpi / Charts / Table 폴더화 및
+              Storybook 권장.
+            </li>
+            <li>
+              테마: 브랜드 기본색(#1D97DB)을 Tailwind theme primary에 바인딩.
+            </li>
+            <li>
+              접근성: 키보드 포커스, 대비(AAA 근접), 로딩 라이브리전 확인.
+            </li>
+            <li>
+              페이지: Dashboard / METAR Search / Statistics / Crosswind /
+              Stations / Settings.
+            </li>
+          </ul>
+        </div>
+      </main>
+    </>
   );
 }

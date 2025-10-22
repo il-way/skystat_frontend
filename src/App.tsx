@@ -1,57 +1,18 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-} from "./components/ui/sidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Button } from "./components/ui/button";
-import { Input } from "./components/ui/input";
-import { Badge } from "./components/ui/badge";
-import { Separator } from "./components/ui/separator";
-import {
-  BarChart3,
-  Cloud,
-  GaugeCircle,
-  MapPin,
-  Settings,
-  Wind,
-  Search,
-  Database,
-} from "lucide-react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import { SidebarProvider } from "./components/ui/sidebar";
+import { Wind } from "lucide-react";
 import {
   QueryClient,
   QueryClientProvider,
-  useQuery,
   keepPreviousData,
 } from "@tanstack/react-query";
-import { KpiCardGrid } from "./components/kpi/KpiGrid";
-import type { KpiValues } from "./types/components/kpi/KpiValues";
-import Topbar from "./components/topbar/Topbar";
-import WindLineChart from "./components/chart/WindLineChart";
-import ResultsTable from "./components/table/DashboardTable";
-import SidebarNav from "./components/sidebar/SidebarNav";
-import { localInputToISO, toLocalInput } from "./lib/date";
 import Dashboard from "./pages/Dashboard";
-
-
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import Visibility from "./pages/Visibility";
+import Temperature from "./pages/Temperature";
+import WindRose from "./pages/WindRose";
+import Weather from "./pages/Weather";
+import Altimeter from "./pages/Altimeter";
+import SidebarNav from "./components/sidebar/SidebarNav";
 
 // React Query: client & env
 const queryClient = new QueryClient({
@@ -67,7 +28,6 @@ const queryClient = new QueryClient({
   },
 });
 
-
 // ================================
 // Root → Providers → Dashboard
 // ================================
@@ -76,10 +36,31 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SidebarProvider>
-        <Dashboard />
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/visibility" element={<Visibility />} />
+            <Route path="/wind" element={<Wind />} />
+            <Route path="/altimeter" element={<Altimeter />} />
+            <Route path="/weather" element={<Weather />} />
+            <Route path="/temperature" element={<Temperature />} />
+            <Route path="/windrose" element={<WindRose />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+        </Routes>
       </SidebarProvider>
     </QueryClientProvider>
   );
 }
 
-
+function AppLayout() {
+  return (
+    <div className="flex h-screen w-full bg-background text-foreground">
+      <SidebarNav />
+      <div className="flex-1 flex flex-col">
+        <Outlet />
+      </div>
+    </div>
+  );
+}
