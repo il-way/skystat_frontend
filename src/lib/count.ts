@@ -2,6 +2,7 @@ import type { ObservationStatisticResponse } from "@/types/api/response/statisti
 import { monthShortNames } from "./date";
 import type { MonthlyCount } from "@/types/api/response/common/MonthlyCount";
 import type { HourlyCount } from "@/types/api/response/common/HourlyCount";
+import type { MonthShortName } from "@/types/dates/Dates";
 
 export function groupMonthly(resp?: ObservationStatisticResponse) {
   const rows = (resp?.monthlyData ?? []) as MonthlyCount[];
@@ -15,13 +16,18 @@ export function groupMonthly(resp?: ObservationStatisticResponse) {
   const total = Array(12).fill(0);
   years.forEach(y => byYear.get(y)!.forEach((count, monthIdx) => total[monthIdx]+=count));
 
-  const toSeries = (arr: number[]) => [...monthShortNames].map((m, i) => ({ m, count: arr[i] || 0}));
+  const toSeries = (arr: number[]) => [...monthShortNames].map((monthShortName, i) => ({ monthShortName, count: arr[i] || 0}));
+
+  const totalDaysCount: number = total.reduce((a,b) => a+b, 0);
+  const mostFrequentMonth: MonthShortName = monthShortNames[total.findIndex((count) => count === Math.max(...total))];
 
   return {
     years,
     byYear,
     totalSeries: toSeries(total),
-    seriesOf: (year:number)=> toSeries(byYear.get(year) ?? Array(12).fill(0))
+    seriesOf: (year:number)=> toSeries(byYear.get(year) ?? Array(12).fill(0)),
+    mostFrequentMonth,
+    totalDaysCount
   };
 
 }
@@ -38,7 +44,7 @@ export function groupHourly(resp?: ObservationStatisticResponse) {
   }
 
   const years = Array.from(store.keys()).sort((a,b) => a-b);
-  const by = (year: number, month: number) => (
+  const byYearMonth = (year: number, month: number) => (
     store.get(year)?.get(month)
     ?? Array(24).fill(0)
   ).map((count, hour) => (
@@ -54,5 +60,18 @@ export function groupHourly(resp?: ObservationStatisticResponse) {
     return acc.map((count,hour)=>({ hour: hour.toString().padStart(2,"0"), count }));
   };
 
-  return { years, by, totalOf };
+  const mostFrequentHour = (month:number | MonthShortName) => {
+    let monthValue = 1;
+    if (typeof month === "number") {
+      monthValue = month;
+    } else {
+      monthValue = monthShortNames.indexOf(month) + 1;
+    }
+    const totalCounts = totalOf(monthValue).map(({count})=>count);
+    const maxCount = Math.max(...totalCounts);
+    const hourIdx = totalCounts.findIndex(c => c === maxCount);
+    return hourIdx.toString().padStart(2,"0");
+  }
+
+  return { years, byYearMonth, totalOf, mostFrequentHour };
 }

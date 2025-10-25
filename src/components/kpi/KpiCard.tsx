@@ -1,4 +1,4 @@
-import Hint from "../commin/Hint";
+import Hint from "../common/Hint";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function KpiCard({ title, value, hint }: { title: string; value: string; hint?: string }) {

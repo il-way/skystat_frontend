@@ -8,4 +8,5 @@ export type TopbarProps = {
   loading: boolean;
   isFetching: boolean;
   onFetch: () => void;
+  rightSlot?: React.ReactNode;
 };

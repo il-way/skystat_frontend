@@ -6,8 +6,9 @@ import type { WeatherStatisticQueryParams } from "@/types/api/request/statistic/
 
 export function buildThresholdURL(params: ThresholdStatisticQueryParams): string {
   const { icao, field, comparison, unit, startISO, endISO } = params;
-  const path = `/metar/statistic/threshold/${encodeURIComponent(icao)}`;
+  const path = "/metar/statistic/threshold";
   const queryString = new URLSearchParams({
+    icao,
     field,
     comparison,
     threshold: params.threshold.toString(),
@@ -21,8 +22,9 @@ export function buildThresholdURL(params: ThresholdStatisticQueryParams): string
 
 export function buildWeatherURL(params: WeatherStatisticQueryParams): string {
   const { icao, condition, list, startISO, endISO } = params;
-  const path = `/metar/statistic/weather/${encodeURIComponent(icao)}`;
+  const path = "/metar/statistic/weather";
   const queryString = new URLSearchParams({
+    icao,
     condition,
     startDateTime: startISO,
     endDateTime: endISO,
@@ -33,8 +35,9 @@ export function buildWeatherURL(params: WeatherStatisticQueryParams): string {
 
 export function buildCloudURL(params: CloudStatisticQueryParams): string {
   const { icao, condition, target, startISO, endISO } = params;
-  const path = `/metar/statistic/cloud/${encodeURIComponent(icao)}`;
+  const path = "/metar/statistic/cloud";
   const queryString = new URLSearchParams({
+    icao,
     condition,
     target,
     startDateTime: startISO,
@@ -45,8 +48,9 @@ export function buildCloudURL(params: CloudStatisticQueryParams): string {
 
 export function buildTemperatureURL(params: TemperatureStatisticQueryParams): string {
   const { icao, startYear, endYear } = params;
-  const path =`/metar/statistic/temperature/${encodeURIComponent(icao)}`;
+  const path ="/metar/statistic/temperature";
   const queryString = new URLSearchParams({
+    icao,
     startYear,
     endYear,
   });
@@ -55,8 +59,9 @@ export function buildTemperatureURL(params: TemperatureStatisticQueryParams): st
 
 export function buildWindRoseURL(params: BasicQueryParams): string {
   const { icao, startISO, endISO } = params;
-  const path = `/metar/windrose/${encodeURIComponent(icao)}`;
+  const path = "/metar/windrose";
   const queryString = new URLSearchParams({
+    icao,
     startDateTime: startISO,
     endDateTime: endISO,
   });
@@ -65,13 +70,14 @@ export function buildWindRoseURL(params: BasicQueryParams): string {
 }
 
 export function buildMetarInventoryURL(icao: string): string {
-  return `/metar/inventory/${encodeURIComponent(icao)}`;
+  return `/metar/inventory?icao=${encodeURIComponent(icao)}`;
 }
 
 export function buildAverageSummaryURL(params: BasicQueryParams): string {
   const { icao, startISO, endISO } = params;
-  const path = `/metar/average/summary/${encodeURIComponent(icao)}`;
+  const path = "/metar/average/summary";
   const queryString = new URLSearchParams({
+    icao,
     startDateTime: startISO,
     endDateTime: endISO,
   });

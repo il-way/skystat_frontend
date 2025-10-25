@@ -13,6 +13,7 @@ import WindRose from "./pages/WindRose";
 import Weather from "./pages/Weather";
 import Altimeter from "./pages/Altimeter";
 import SidebarNav from "./components/sidebar/SidebarNav";
+import { ScopeProvider } from "./context/Scope";
 
 // React Query: client & env
 const queryClient = new QueryClient({
@@ -36,19 +37,21 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SidebarProvider>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/visibility" element={<Visibility />} />
-            <Route path="/wind" element={<Wind />} />
-            <Route path="/altimeter" element={<Altimeter />} />
-            <Route path="/weather" element={<Weather />} />
-            <Route path="/temperature" element={<Temperature />} />
-            <Route path="/windrose" element={<WindRose />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Route>
-        </Routes>
+        {/* <ScopeProvider> */}
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/visibility" element={<Visibility />} />
+              <Route path="/wind" element={<Wind />} />
+              <Route path="/altimeter" element={<Altimeter />} />
+              <Route path="/weather" element={<Weather />} />
+              <Route path="/temperature" element={<Temperature />} />
+              <Route path="/windrose" element={<WindRose />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Route>
+          </Routes>
+        {/* </ScopeProvider> */}
       </SidebarProvider>
     </QueryClientProvider>
   );

@@ -1,16 +1,13 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import WindLineChart from "@/components/chart/WindLineChart";
-import { KpiCardGrid } from "@/components/kpi/KpiGrid";
-import SidebarNav from "@/components/sidebar/SidebarNav";
+import { DashboardKpiCardGrid } from "@/components/kpi/DashboardKpiGrid";
 import DashboardTable from "@/components/table/DashboardTable";
-import ResultsTable from "@/components/table/DashboardTable";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { localInputToISO, toLocalInput } from "@/lib/date";
-import { buildAverageSummaryURL } from "@/lib/url";
 import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { KpiValues } from "@/types/components/kpi/KpiValues";
+import type { DashboardKpiValues } from "@/types/components/kpi/DashboardKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
@@ -70,7 +67,7 @@ export default function Dashboard() {
     }
   }
 
-  const kpis: KpiValues = useMemo(
+  const kpis: DashboardKpiValues = useMemo(
     () => ({
       sampleSize: avg?.totalCount ?? 0,
       avgVisibilityM: Math.round(avg?.avgVisibilityM ?? 0),
@@ -133,7 +130,7 @@ export default function Dashboard() {
         </div>
 
         {/* KPIs */}
-        <KpiCardGrid kpis={kpis} />
+        <DashboardKpiCardGrid kpis={kpis} />
 
         {/* Chart */}
         <motion.div

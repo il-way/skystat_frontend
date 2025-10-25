@@ -10,7 +10,7 @@ export function toLocalInput(dt: number | string | Date): string {
     const hh = pad(d.getHours());
     const mi = pad(d.getMinutes());
     return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;  
-  } catch (error) {
+  } catch {
     return ""
   }
 }
@@ -18,7 +18,7 @@ export function toLocalInput(dt: number | string | Date): string {
 export function localInputToISO(local: string): string {
   try {
     return new Date(local).toISOString();
-  } catch (error) {
+  } catch {
     return "";
   }
   

@@ -6,6 +6,7 @@ import {
   Feather,
   Gauge,
   GaugeCircle,
+  Mail,
   Rainbow,
   Sun,
   ThermometerSnowflake,
@@ -57,7 +58,7 @@ export default function SidebarNav() {
       </SidebarContent>
       <SidebarFooter>
         <div className="px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
-          <Database className="h-4 w-4" /> Backend: Spring Boot 3.9 (Assumed)
+          <Database className="h-4 w-4" /> Created by: il-way<br/>(ilway5186@google.com)
         </div>
       </SidebarFooter>
     </Sidebar>

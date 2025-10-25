@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { useMemo, type JSX } from "react";
-import Hint from "../commin/Hint";
+import Hint from "../common/Hint";
 import type { DashboardTableRow } from "@/types/components/dashboard/DashboardTable";
 import { monthShortNameFrom } from "@/lib/date";
 
