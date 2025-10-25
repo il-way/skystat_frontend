@@ -1,5 +1,6 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
+import Hint from "@/components/common/Hint";
 import { ThresholdKpiCardGrid } from "@/components/kpi/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
@@ -115,7 +116,7 @@ export default function Visibility() {
         isFetching={isFetching}
         onFetch={handleFetch}
         rightSlot={
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-3 mr-3">
             <div className="flex">
               <div className="flex items-center text-sm px-2">Visibility ≤</div>
               <input
@@ -139,8 +140,9 @@ export default function Visibility() {
             <span>Analytics</span>
             <span>/</span>
             <span className="text-foreground">Visibility</span>
+            <Hint text="[m]"/>
           </div>
-          <Badge variant="secondary">Preview</Badge>
+          <Badge variant="secondary">Summary</Badge>
         </div>
 
         <ThresholdKpiCardGrid kpis={kpis} />

@@ -1,5 +1,4 @@
 import { SidebarProvider } from "./components/ui/sidebar";
-import { Wind } from "lucide-react";
 import {
   QueryClient,
   QueryClientProvider,
@@ -14,6 +13,7 @@ import Weather from "./pages/Weather";
 import Altimeter from "./pages/Altimeter";
 import SidebarNav from "./components/sidebar/SidebarNav";
 import { ScopeProvider } from "./context/Scope";
+import Wind from "./pages/Wind";
 
 // React Query: client & env
 const queryClient = new QueryClient({
