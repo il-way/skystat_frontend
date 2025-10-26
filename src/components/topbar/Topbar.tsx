@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import Hint from "../common/Hint";
 
 export default function Topbar(props: TopbarProps): JSX.Element {
   const {
@@ -42,16 +43,15 @@ export default function Topbar(props: TopbarProps): JSX.Element {
           <div>
             {/* <Label>From</Label> */}
             <Input
-              type="datetime-local"
+              type={props.inputType ?? "datetime-local"}
               value={from}
               onChange={(e) => setFrom(e.target.value)}
             />
           </div>
-
           <div>
             {/* <Label>To</Label> */}
             <Input
-              type="datetime-local"
+              type={props.inputType ?? "datetime-local"}
               value={to}
               onChange={(e) => setTo(e.target.value)}
             />

@@ -1,3 +1,5 @@
+import type { HTMLInputTypeAttribute } from "react";
+
 export type TopbarProps = {
   icao: string,
   setIcao: (v: string) => void;
@@ -9,4 +11,5 @@ export type TopbarProps = {
   isFetching: boolean;
   onFetch: () => void;
   rightSlot?: React.ReactNode;
+  inputType?: HTMLInputTypeAttribute;
 };

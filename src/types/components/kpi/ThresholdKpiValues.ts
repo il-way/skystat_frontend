@@ -1,8 +1,7 @@
-import type { MonthShortName } from "@/types/dates/Dates";
-
-export type ThresholdKpiValues = {
+export type TemperaturedKpiValues = {
+  years: number[];
   sampleSize: number;
-  totalDaysCount: number;
-  mostFrequentMonth: MonthShortName;
-  mostFrequentHour: string;
+  annualMean: number;
+  annualMax: number;
+  annualMin: number;
 };

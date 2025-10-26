@@ -10,26 +10,32 @@ export function groupMonthly(resp?: ObservationStatisticResponse) {
   const byYear = new Map<number, number[]>();
   for (const r of rows) {
     if (!byYear.has(r.year)) byYear.set(r.year, Array(12).fill(0));
-    byYear.get(r.year)![r.month-1] += r.count;
+    byYear.get(r.year)![r.month - 1] += r.count;
   }
-  const years = Array.from(byYear.keys()).sort((a,b) => a-b);
+  const years = Array.from(byYear.keys()).sort((a, b) => a - b);
   const total = Array(12).fill(0);
-  years.forEach(y => byYear.get(y)!.forEach((count, monthIdx) => total[monthIdx]+=count));
+  years.forEach((y) =>
+    byYear.get(y)!.forEach((count, monthIdx) => (total[monthIdx] += count))
+  );
 
-  const toSeries = (arr: number[]) => [...monthShortNames].map((monthShortName, i) => ({ monthShortName, count: arr[i] || 0}));
+  const toSeries = (arr: number[]) =>
+    [...monthShortNames].map((monthShortName, i) => ({
+      monthShortName,
+      count: arr[i] || 0,
+    }));
 
-  const totalDaysCount: number = total.reduce((a,b) => a+b, 0);
-  const mostFrequentMonth: MonthShortName = monthShortNames[total.findIndex((count) => count === Math.max(...total))];
+  const totalDaysCount: number = total.reduce((a, b) => a + b, 0);
+  const mostFrequentMonth: MonthShortName =
+    monthShortNames[total.findIndex((count) => count === Math.max(...total))];
 
   return {
     years,
     byYear,
     totalSeries: toSeries(total),
-    seriesOf: (year:number)=> toSeries(byYear.get(year) ?? Array(12).fill(0)),
+    seriesOf: (year: number) => toSeries(byYear.get(year) ?? Array(12).fill(0)),
     mostFrequentMonth,
-    totalDaysCount
+    totalDaysCount,
   };
-
 }
 
 export function groupHourly(resp?: ObservationStatisticResponse) {
@@ -43,35 +49,38 @@ export function groupHourly(resp?: ObservationStatisticResponse) {
     monthMap.get(r.month)![r.hour] += r.count;
   }
 
-  const years = Array.from(store.keys()).sort((a,b) => a-b);
-  const byYearMonth = (year: number, month: number) => (
-    store.get(year)?.get(month)
-    ?? Array(24).fill(0)
-  ).map((count, hour) => (
-    { hour: hour.toString().padStart(2, "0"), count})
-  );
+  const years = Array.from(store.keys()).sort((a, b) => a - b);
+  const byYearMonth = (year: number, month: number) =>
+    (store.get(year)?.get(month) ?? Array(24).fill(0)).map((count, hour) => ({
+      hour: hour.toString().padStart(2, "0"),
+      count,
+    }));
 
-  const totalOf = (month:number) => {
+  const totalOf = (month: number) => {
     const acc = Array(24).fill(0);
-    years.forEach(y => (
-      store.get(y)?.get(month) 
-      ?? Array(24).fill(0)
-    ).forEach((count, hour)=> acc[hour]+=count));
-    return acc.map((count,hour)=>({ hour: hour.toString().padStart(2,"0"), count }));
+    years.forEach((y) =>
+      (store.get(y)?.get(month) ?? Array(24).fill(0)).forEach(
+        (count, hour) => (acc[hour] += count)
+      )
+    );
+    return acc.map((count, hour) => ({
+      hour: hour.toString().padStart(2, "0"),
+      count,
+    }));
   };
 
-  const mostFrequentHour = (month:number | MonthShortName) => {
+  const mostFrequentHour = (month: number | MonthShortName) => {
     let monthValue = 1;
     if (typeof month === "number") {
       monthValue = month;
     } else {
       monthValue = monthShortNames.indexOf(month) + 1;
     }
-    const totalCounts = totalOf(monthValue).map(({count})=>count);
+    const totalCounts = totalOf(monthValue).map(({ count }) => count);
     const maxCount = Math.max(...totalCounts);
-    const hourIdx = totalCounts.findIndex(c => c === maxCount);
-    return hourIdx.toString().padStart(2,"0");
-  }
+    const hourIdx = totalCounts.findIndex((c) => c === maxCount);
+    return hourIdx.toString().padStart(2, "0");
+  };
 
   return { years, byYearMonth, totalOf, mostFrequentHour };
 }

@@ -14,9 +14,7 @@ import { useEffect, useMemo, useState } from "react";
 
 export default function Dashboard() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(
-    toLocalInput(Date.parse("2019-01-01 00:00"))
-  );
+  const [from, setFrom] = useState(toLocalInput(Date.parse("2019-01-01 00:00")));
   const [to, setTo] = useState(toLocalInput(Date.parse("2023-01-01 00:00")));
   const [loading, setLoading] = useState(false);
 
@@ -126,7 +124,12 @@ export default function Dashboard() {
             <span>/</span>
             <span className="text-foreground">Dashboard</span>
           </div>
-          <Badge variant="secondary">Preview</Badge>
+          {avg && avg.totalCount > 0
+            ? <Badge variant="secondary">Summary</Badge>
+            : avgError === null 
+              ? <Badge variant="destructive">No Data</Badge>
+              : <Badge variant="destructive">Error</Badge>
+          }
         </div>
 
         {/* KPIs */}

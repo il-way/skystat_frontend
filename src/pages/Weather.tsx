@@ -153,10 +153,15 @@ export default function Weather() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Analytics</span>
             <span>/</span>
-            <span className="text-foreground">Altimeter</span>
+            <span className="text-foreground">Weather</span>
             <Hint text="[hPa]"/>
           </div>
-          <Badge variant="secondary">Summary</Badge>
+          {data && data.totalCount > 0
+            ? <Badge variant="secondary">Summary</Badge>
+            : error === null 
+              ? <Badge variant="destructive">No Data</Badge>
+              : <Badge variant="destructive">Error</Badge>
+          }
         </div>
 
         <ThresholdKpiCardGrid kpis={kpis} />
@@ -369,8 +374,9 @@ export default function Weather() {
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              현재 SN를 검색하면 FZSN, BLSN같은 descriptor+phenomena 방식에선 SN를 잡아내지만 SNPL같인 phenomena+phenomena+...같은 경우엔 못잡아냄. 딱 해당 코드만 있는 걸 잡아내도록 설계돼있음
+              현재 SN를 검색하면 FZSN, BLSN같은 descriptor+phenomena 방식
             </li>
+            <li>에선 SN를 잡아내지만 SNPL같인 phenomena+phenomena+...같은 경우엔 못잡아냄. 딱 해당 코드만 있는 걸 잡아내도록 설계돼있음</li>
             <li>
               SNPL같은 경우 눈이 온걸로 집계하려면 서버측 HAVING절에 = :phenomenonCount를 ＞ 0으로 바꿔버리면 됨
             </li>

@@ -15,10 +15,23 @@ import type { WeatherStatisticQueryParams } from "@/types/api/request/statistic/
 import type { WindRoseQueryParams } from "@/types/api/request/statistic/WindRoseQueryParams";
 import type { AverageSummaryResponse } from "@/types/api/response/statistic/AverageSummaryResponse";
 import type { ObservationStatisticResponse } from "@/types/api/response/statistic/ObservationStatisticResponse";
+import type { TemperatureStatisticResponse } from "@/types/api/response/statistic/TemperatureStatisticResponse";
 import type { DashboardTableRow } from "@/types/components/dashboard/DashboardTable";
 
 export class MetarStatisticApi {
   static host = "/api";
+
+  static async fetchTemperatureStatistic(
+    params: TemperatureStatisticQueryParams
+  ) {
+    const uri = MetarStatisticApi.host + buildTemperatureURL(params);
+    const res = await fetch(uri.toString(), {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+    return res.json() as Promise<TemperatureStatisticResponse>;
+  }
 
   static async fetchDashboadTableSummary(params: BasicQueryParams) {
     const { icao, startISO, endISO } = params;
@@ -81,26 +94,34 @@ export class MetarStatisticApi {
       this.fetchWeatherStatistic(snowParams),
     ]);
 
-    const fields: Array<keyof Omit<DashboardTableRow, "month">> = ["windPeak", "visibility", "ceiling", "thunderStorm", "snow"];
-    const result: DashboardTableRow[] = monthValues.map(m => ({
+    const fields: Array<keyof Omit<DashboardTableRow, "month">> = [
+      "windPeak",
+      "visibility",
+      "ceiling",
+      "thunderStorm",
+      "snow",
+    ];
+    const result: DashboardTableRow[] = monthValues.map((m) => ({
       month: m,
       windPeak: 0,
       visibility: 0,
       ceiling: 0,
       thunderStorm: 0,
-      snow: 0
+      snow: 0,
     }));
 
-    const list = response.map(obs => obs.status === "fulfilled" ? obs.value.monthlyData : []);
+    const list = response.map((obs) =>
+      obs.status === "fulfilled" ? obs.value.monthlyData : []
+    );
     list.forEach((monthlyCountList, idx) => {
       const field = fields[idx];
       monthlyCountList.forEach(({ month, count }) => {
-        const row = result[month-1];
+        const row = result[month - 1];
         if (row && row.month === month) {
           row[field] += count;
         }
-      })
-    })
+      });
+    });
 
     return result;
   }
@@ -137,18 +158,6 @@ export class MetarStatisticApi {
 
   static async fetchWindRoseStatistic(params: WindRoseQueryParams) {
     const uri = MetarStatisticApi.host + buildWindRoseURL(params);
-    const res = await fetch(uri.toString(), {
-      headers: {
-        Accept: "application/json",
-      },
-    });
-    return res.json() as Promise<ObservationStatisticResponse>;
-  }
-
-  static async fetchTemperatureStatistic(
-    params: TemperatureStatisticQueryParams
-  ) {
-    const uri = MetarStatisticApi.host + buildTemperatureURL(params);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: "application/json",

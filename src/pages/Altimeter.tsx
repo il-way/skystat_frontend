@@ -50,7 +50,7 @@ export default function Altimeter() {
   );
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["wind-threshold-stats", basicQueryParams],
+    queryKey: ["altimeter-threshold-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchThresholdStatistic({
         icao,
@@ -142,7 +142,12 @@ export default function Altimeter() {
             <span className="text-foreground">Altimeter</span>
             <Hint text="[hPa]"/>
           </div>
-          <Badge variant="secondary">Summary</Badge>
+          {data && data.totalCount > 0
+            ? <Badge variant="secondary">Summary</Badge>
+            : error === null 
+              ? <Badge variant="destructive">No Data</Badge>
+              : <Badge variant="destructive">Error</Badge>
+          }
         </div>
 
         <ThresholdKpiCardGrid kpis={kpis} />
