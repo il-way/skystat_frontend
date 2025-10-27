@@ -1,7 +1,8 @@
-export type TemperaturedKpiValues = {
-  years: number[];
+export type ThresholdKpiValues = {
+  coverageFrom: string;
+  coverageTo: string;
   sampleSize: number;
-  annualMean: number;
-  annualMax: number;
-  annualMin: number;
+  totalDaysCount: number;
+  mostFrequentMonth: string;
+  mostFrequentHour: string;
 };

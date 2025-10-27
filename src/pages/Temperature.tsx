@@ -146,7 +146,12 @@ export default function Temperature() {
             <span className="text-foreground">Temperature</span>
             <Hint text="[℃]"/>
           </div>
-          <Badge variant="secondary">Summary</Badge>
+          {data && data.totalCount > 0
+            ? <Badge variant="secondary">Summary</Badge>
+            : error === null 
+              ? <Badge variant="destructive">No Data</Badge>
+              : <Badge variant="destructive">Error</Badge>
+          }
         </div>
 
         <TemperatureKpiGrid kpis={kpis} />

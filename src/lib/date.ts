@@ -31,3 +31,10 @@ export const monthShortNames: MonthShortName[] = ["JAN", "FEB", "MAR", "APR", "M
 export function monthShortNameFrom(monthValue: number) {
   return monthShortNames[monthValue-1];
 }
+
+export function getYearsFrom(coverageFrom: string, coverageTo: string) {
+  const from = localInputToISO(coverageFrom);
+  const to = localInputToISO(coverageTo);
+
+  return [from.slice(0,4), to.slice(0,4)];
+}

@@ -1,6 +1,5 @@
+import type { WindLineData } from "./WindLineData"
+
 export type WindLineProps = {
-  data: {
-    t: string;
-    wind: number
-  }[]
+  data: WindLineData[];
 }

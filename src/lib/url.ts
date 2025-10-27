@@ -84,3 +84,16 @@ export function buildAverageSummaryURL(params: BasicQueryParams): string {
   
   return `${path}?${queryString}`;
 }
+
+export function buildWindSpeedAverageMonthlyURL(params: BasicQueryParams): string {
+  const { icao, startISO, endISO } = params;
+  const path ="/metar/average";
+  const queryString = new URLSearchParams({
+    icao,
+    startDateTime: startISO,
+    endDateTime: endISO,
+    field: "windspeed",
+    unit: "kt"
+  });
+  return `${path}?${queryString}`;
+}

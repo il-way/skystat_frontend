@@ -5,8 +5,10 @@ import DashboardTable from "@/components/table/DashboardTable";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { localInputToISO, toLocalInput } from "@/lib/date";
+import { localInputToISO, monthShortNameFrom, toLocalInput } from "@/lib/date";
+import { round2 } from "@/lib/temperature";
 import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
+import type { WindLineData } from "@/types/components/charts/WindLineData";
 import type { DashboardKpiValues } from "@/types/components/kpi/DashboardKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -29,12 +31,7 @@ export default function Dashboard() {
     [icao, from, to]
   );
 
-  const {
-    data: avg,
-    isFetching: avgIsFetching,
-    error: avgError,
-    refetch: avgRefetch,
-  } = useQuery({
+  const { data: avg, isFetching: avgIsFetching, error: avgError, refetch: avgRefetch } = useQuery({
     queryKey: ["dashboard-avg-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchAverageSummary(basicQueryParams),
@@ -42,15 +39,17 @@ export default function Dashboard() {
     placeholderData: keepPreviousData,
   });
 
-  const {
-    data: tableRows,
-    isFetching: tableIsFetching,
-    error: tableError,
-    refetch: tableRefetch,
-  } = useQuery({
+  const { data: tableRows, isFetching: tableIsFetching, error: tableError, refetch: tableRefetch } = useQuery({
     queryKey: ["dashboard-table-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchDashboadTableSummary(basicQueryParams),
+    enabled: false,
+    placeholderData: keepPreviousData,
+  });
+
+  const { data: avgWind, refetch: avgWindRefetch } = useQuery({
+    queryKey: ["dashboard-avg-wind", basicQueryParams],
+    queryFn: async () => MetarStatisticApi.fetchAverageWindSpeedMonthly(basicQueryParams),
     enabled: false,
     placeholderData: keepPreviousData,
   });
@@ -60,6 +59,7 @@ export default function Dashboard() {
     try {
       await avgRefetch();
       await tableRefetch();
+      await avgWindRefetch();
     } finally {
       setLoading(false);
     }
@@ -67,6 +67,8 @@ export default function Dashboard() {
 
   const kpis: DashboardKpiValues = useMemo(
     () => ({
+      coverageFrom: avg?.coverageFrom ?? "",
+      coverageTo: avg?.coverageTo ?? "",
       sampleSize: avg?.totalCount ?? 0,
       avgVisibilityM: Math.round(avg?.avgVisibilityM ?? 0),
       avgCeilingFt: Math.round(avg?.avgCeilingFt ?? 0),
@@ -75,30 +77,27 @@ export default function Dashboard() {
     [avg]
   );
 
-  const sampleWindLineData = [
-    { t: "JAN", wind: 8 },
-    { t: "FEB", wind: 10 },
-    { t: "MAR", wind: 12 },
-    { t: "APR", wind: 14 },
-    { t: "MAY", wind: 13 },
-    { t: "JUN", wind: 11 },
-    { t: "JUL", wind: 9 },
-    { t: "AUG", wind: 7 },
-    { t: "SEP", wind: 8 },
-    { t: "OCT", wind: 6 },
-    { t: "NOV", wind: 6 },
-    { t: "DEC", wind: 6 },
-  ];
-
-  // const chartData = useMemo(() => {
-  //   const hourly = (obs && (obs.hourlyDat || obs.hourlyData)) || [];
-  //   const mapped = mapHourlyToChartPoints(hourly);
-  //   if (mapped.length > 0) return mapped;
-  //   return rows
-  //     .slice()
-  //     .sort((a, b) => new Date(a.time) - new Date(b.time))
-  //     .map((r) => ({ t: new Date(r.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), wind: r.windSpdKt }));
-  // }, [obs, rows])
+  const windLineData: WindLineData[] = useMemo(() => {
+    const data: WindLineData[] = [
+      { month: "JAN", wind: 0 },
+      { month: "FEB", wind: 0 },
+      { month: "MAR", wind: 0 },
+      { month: "APR", wind: 0 },
+      { month: "MAY", wind: 0 },
+      { month: "JUN", wind: 0 },
+      { month: "JUL", wind: 0 },
+      { month: "AUG", wind: 0 },
+      { month: "SEP", wind: 0 },
+      { month: "OCT", wind: 0 },
+      { month: "NOV", wind: 0 },
+      { month: "DEC", wind: 0 },
+    ];
+    avgWind?.monthly.forEach((m,i) => data[i] = { 
+      month: monthShortNameFrom(m.month), 
+      wind: round2(m.value) ?? 0,
+    });
+    return data;
+  }, [avgWind]);
 
   return (
     <>
@@ -140,7 +139,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <WindLineChart data={sampleWindLineData} />
+          <WindLineChart data={windLineData} />
         </motion.div>
 
         {/* Table */}

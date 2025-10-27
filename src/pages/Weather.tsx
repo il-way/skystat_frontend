@@ -83,6 +83,8 @@ export default function Weather() {
 
   const kpis: ThresholdKpiValues = useMemo(
     () => ({
+      coverageFrom: data?.coverageFrom ?? "",
+      coverageTo: data?.coverageTo ?? "",
       sampleSize: data?.totalCount ?? 0,
       totalDaysCount: monthAgg.totalDaysCount ?? 0,
       mostFrequentMonth: monthAgg.mostFrequentMonth ?? "JAN",

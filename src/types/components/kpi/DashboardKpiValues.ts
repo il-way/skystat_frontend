@@ -1,4 +1,6 @@
 export type DashboardKpiValues = {
+  coverageFrom: string;
+  coverageTo: string;
   sampleSize: number;
   avgVisibilityM: number;
   avgWindSpeedKt: number;
