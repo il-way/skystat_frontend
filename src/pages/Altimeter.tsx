@@ -313,20 +313,18 @@ export default function Altimeter() {
             className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
           >
             {hrView === "graph" ? (
-              <ChartAutoSizer>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={hourSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartAutoSizer>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={hourSeries}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

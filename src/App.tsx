@@ -8,12 +8,12 @@ import Dashboard from "./pages/Dashboard";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import Visibility from "./pages/Visibility";
 import Temperature from "./pages/Temperature";
-import WindRose from "./pages/WindRose";
 import Weather from "./pages/Weather";
 import Altimeter from "./pages/Altimeter";
 import SidebarNav from "./components/sidebar/SidebarNav";
 import { ScopeProvider } from "./context/Scope";
 import Wind from "./pages/Wind";
+import Windrose from "./pages/windrose/Windrose";
 
 // React Query: client & env
 const queryClient = new QueryClient({
@@ -47,7 +47,7 @@ export default function App() {
               <Route path="/altimeter" element={<Altimeter />} />
               <Route path="/weather" element={<Weather />} />
               <Route path="/temperature" element={<Temperature />} />
-              <Route path="/windrose" element={<WindRose />} />
+              <Route path="/windrose" element={<Windrose />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </Routes>

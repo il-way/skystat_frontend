@@ -18,6 +18,7 @@ import type { AverageSummaryResponse } from "@/types/api/response/statistic/Aver
 import type { AverageWindSpeedMonthlyResponse } from "@/types/api/response/statistic/AverageWindSpeedMonthlyResponse";
 import type { ObservationStatisticResponse } from "@/types/api/response/statistic/ObservationStatisticResponse";
 import type { TemperatureStatisticResponse } from "@/types/api/response/statistic/TemperatureStatisticResponse";
+import type { WindroseResponse } from "@/types/api/response/windrose/WindroseResponse";
 import type { DashboardTableRow } from "@/types/components/dashboard/DashboardTable";
 
 export class MetarStatisticApi {
@@ -82,7 +83,7 @@ export class MetarStatisticApi {
         Accept: "application/json",
       },
     });
-    return res.json() as Promise<ObservationStatisticResponse>;
+    return res.json() as Promise<WindroseResponse>;
   }
 
   static async fetchAverageSummary(params: BasicQueryParams) {
