@@ -5,20 +5,29 @@ import DashboardTable from "@/pages/dashboard/components/DashboardTable";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { monthShortNameFrom, monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
+import {
+  monthShortNameFrom,
+  monthShortNames,
+  toUTCInput,
+  utcInputToISO,
+} from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import type { DashboardKpiValues } from "@/pages/dashboard/types/DashboardKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { WindLineData } from "./types/WindLineData";
 import { round2 } from "@/lib/math";
+import { getErrorMessage } from "@/lib/page";
+import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 
 export default function Dashboard() {
   const [icao, setIcao] = useState("KJFK");
   const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
   const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
   const [loading, setLoading] = useState(false);
+  const [errOpen, setErrOpen] = useState(false);
+  const [errDetails, setErrDetails] = useState("");
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
@@ -29,7 +38,13 @@ export default function Dashboard() {
     [icao, from, to]
   );
 
-  const { data: avg, isFetching: avgIsFetching, error: avgError, refetch: avgRefetch } = useQuery({
+  const {
+    data: avg,
+    isFetching: avgIsFetching,
+    isFetched: avgIsFetched,
+    error: avgError,
+    refetch: avgRefetch,
+  } = useQuery({
     queryKey: ["dashboard-avg-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchAverageSummary(basicQueryParams),
@@ -37,7 +52,12 @@ export default function Dashboard() {
     placeholderData: keepPreviousData,
   });
 
-  const { data: tableRows, isFetching: tableIsFetching, error: tableError, refetch: tableRefetch } = useQuery({
+  const {
+    data: tableRows,
+    isFetching: tableIsFetching,
+    error: tableError,
+    refetch: tableRefetch,
+  } = useQuery({
     queryKey: ["dashboard-table-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchDashboadTableSummary(basicQueryParams),
@@ -45,19 +65,38 @@ export default function Dashboard() {
     placeholderData: keepPreviousData,
   });
 
-  const { data: avgWind, error: avgWindError, refetch: avgWindRefetch } = useQuery({
+  const {
+    data: avgWind,
+    isFetching: avgWindIsFetching,
+    error: avgWindError,
+    refetch: avgWindRefetch,
+  } = useQuery({
     queryKey: ["dashboard-avg-wind", basicQueryParams],
-    queryFn: async () => MetarStatisticApi.fetchAverageWindSpeedMonthly(basicQueryParams),
+    queryFn: async () =>
+      MetarStatisticApi.fetchAverageWindSpeedMonthly(basicQueryParams),
     enabled: false,
     placeholderData: keepPreviousData,
   });
 
+  useEffect(() => {
+    const err = avgError || tableError || avgWindError;
+    if (err) {
+      setErrDetails(getErrorMessage(err));
+      setErrOpen(true);
+    }
+  }, [avgError, tableError, avgWindError]);
+
   async function handleFetch() {
     setLoading(true);
     try {
-      await avgRefetch();
-      await tableRefetch();
-      await avgWindRefetch();
+      const r1 = await avgRefetch();
+      const r2 = await tableRefetch();
+      const r3 = await avgWindRefetch();
+      const e = r1.error || r2.error || r3.error;
+      if (e) {
+        setErrDetails(getErrorMessage(e));
+        setErrOpen(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -71,18 +110,29 @@ export default function Dashboard() {
       avgVisibilityM: Math.round(avg?.avgVisibilityM ?? 0),
       avgCeilingFt: Math.round(avg?.avgCeilingFt ?? 0),
       avgWindSpeedKt: Math.round(avg?.avgWindSpeedKt ?? 0),
+      isFetched: avgIsFetched,
+      hasData: (avg?.totalCount ?? 0) > 0,
     }),
-    [avg]
+    [avg, avgIsFetched]
   );
 
   const windLineData: WindLineData[] = useMemo(() => {
-    const data: WindLineData[] = monthShortNames.map(m => ({ month: m, wind: 0 }));
-    avgWind?.monthly.forEach((m,i) => data[i] = { 
-      month: monthShortNameFrom(m.month), 
-      wind: round2(m.value) ?? 0,
-    });
+    const data: WindLineData[] = monthShortNames.map((m) => ({
+      month: m,
+      wind: 0,
+    }));
+    avgWind?.monthly.forEach(
+      (m, i) =>
+        (data[i] = {
+          month: monthShortNameFrom(m.month),
+          wind: round2(m.value) ?? 0,
+        })
+    );
     return data;
   }, [avgWind]);
+
+  const isAnyFetching =
+    loading || avgIsFetching || tableIsFetching || avgWindIsFetching;
 
   return (
     <>
@@ -95,7 +145,7 @@ export default function Dashboard() {
         to={to}
         setTo={setTo}
         loading={loading}
-        isFetching={avgIsFetching}
+        isFetching={isAnyFetching}
         onFetch={handleFetch}
       />
 
@@ -108,12 +158,15 @@ export default function Dashboard() {
             <span>/</span>
             <span className="text-foreground">Dashboard</span>
           </div>
-          {avg && avg.totalCount > 0
-            ? <Badge variant="secondary">Summary</Badge>
-            : (avgError === null && tableError === null && avgWindError === null)
-              ? <Badge variant="destructive">No Data</Badge>
-              : <Badge variant="destructive">Error</Badge>
-          }
+          {avg && avg.totalCount > 0 ? (
+            <Badge variant="secondary">Summary</Badge>
+          ) : avgError === null &&
+            tableError === null &&
+            avgWindError === null ? (
+            <Badge variant="destructive">No Data</Badge>
+          ) : (
+            <Badge variant="destructive">Error</Badge>
+          )}
         </div>
 
         {/* KPIs */}
@@ -133,6 +186,14 @@ export default function Dashboard() {
           from={from}
           to={to}
           rows={tableRows || []}
+        />
+
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
         />
 
         <Separator />

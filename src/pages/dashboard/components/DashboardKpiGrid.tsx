@@ -1,13 +1,11 @@
 import type { DashboardKpiValues } from "@/pages/dashboard/types/DashboardKpiValues";
 import KpiCard from "../../../components/kpi/KpiCard";
 import { getYearsFrom } from "@/lib/date";
+import { dataCoverageHint } from "@/lib/page";
 
 export function DashboardKpiCardGrid({ kpis }: { kpis: DashboardKpiValues }) {
-  const { coverageFrom, coverageTo, sampleSize, avgVisibilityM, avgCeilingFt, avgWindSpeedKt } = kpis;
-  const years = getYearsFrom(coverageFrom, coverageTo);
-  const coverageHint = years.every(y => y !== "")
-      ? `${years[0]} ~ ${years[years.length-1]}`
-      : "Not Searched"
+  const { coverageFrom, coverageTo, sampleSize, avgVisibilityM, avgCeilingFt, avgWindSpeedKt, isFetched, hasData } = kpis;
+  const coverageHint = dataCoverageHint(coverageFrom, coverageTo, isFetched, hasData);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -18,3 +16,4 @@ export function DashboardKpiCardGrid({ kpis }: { kpis: DashboardKpiValues }) {
     </div>
   )
 }
+

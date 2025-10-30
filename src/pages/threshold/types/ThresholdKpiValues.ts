@@ -5,4 +5,6 @@ export type ThresholdKpiValues = {
   totalDaysCount: number;
   mostFrequentMonth: string;
   mostFrequentHour: string;
+  isFetched: boolean;
+  hasData: boolean;
 };

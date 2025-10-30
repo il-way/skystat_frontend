@@ -15,17 +15,11 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { groupHourly, groupMonthly } from "@/lib/count";
-import {
-  localInputToISO,
-  monthShortNames,
-  toLocalInput,
-  toUTCInput,
-  utcInputToISO,
-} from "@/lib/date";
+import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -35,13 +29,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
+import { getErrorMessage } from "@/lib/page";
 
 export default function Visibility() {
   const [icao, setIcao] = useState("KJFK");
   const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
   const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
   const [thresholdM, setThresholdM] = useState<number>(800);
-
+  const [errOpen, setErrOpen] = useState(false);
+  const [errDetails, setErrDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(
@@ -53,7 +50,7 @@ export default function Visibility() {
     [icao, from, to]
   );
 
-  const { data, isFetching, error, refetch } = useQuery({
+  const { data, isFetching, isFetched, error, refetch } = useQuery({
     queryKey: ["visibility-threshold-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchThresholdStatistic({
@@ -69,10 +66,23 @@ export default function Visibility() {
     placeholderData: keepPreviousData,
   });
 
+  useEffect(() => {
+    const err = error;
+    if (err) {
+      setErrDetails(getErrorMessage(err));
+      setErrOpen(true);
+    }
+  }, [error]);
+
   async function handleFetch() {
     setLoading(true);
     try {
-      await refetch();
+      const r = await refetch();
+      const e = r.error;
+      if (e) {
+        setErrDetails(getErrorMessage(e));
+        setErrOpen(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -90,8 +100,10 @@ export default function Visibility() {
       mostFrequentMonth: monthAgg.mostFrequentMonth ?? "JAN",
       mostFrequentHour:
         hourAgg.mostFrequentHour(monthAgg.mostFrequentMonth) ?? "00",
+      isFetched,
+      hasData: isFetched && (data?.totalCount ?? 0) > 0,
     }),
-    [data, monthAgg, hourAgg]
+    [data, monthAgg, hourAgg, isFetched]
   );
 
   const [yearSel, setYearSel] = useState<"total" | number>("total");
@@ -361,6 +373,14 @@ export default function Visibility() {
             )}
           </CardContent>
         </Card>
+
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
 
         <Separator />
         {/* Next steps */}

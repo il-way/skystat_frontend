@@ -15,14 +15,14 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { groupHourly, groupMonthly } from "@/lib/count";
-import { localInputToISO, monthShortNames, toLocalInput, toUTCInput, utcInputToISO } from "@/lib/date";
+import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
 import type { WeatherCondition } from "@/api/types/request/common/Condition";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import type { WeatherDescriptor } from "@/pages/weather/types/WeatherDescriptor";
 import type { WeatherPhenomenon } from "@/pages/weather/types/WeatherPhenomenon";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -33,14 +33,23 @@ import {
   YAxis,
 } from "recharts";
 import { isWeatherDescriptor, isWeatherPhenomenon } from "./WeatherHelper";
+import { getErrorMessage } from "@/lib/page";
+import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 
 export default function Weather() {
   const [icao, setIcao] = useState("KJFK");
   const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
   const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
-  const targetCodes = ["FZ", "SN", "PL", "FG", "TS", "RA", "WS"] as (WeatherDescriptor | WeatherPhenomenon)[]
-  const [target, setTarget] = useState<WeatherDescriptor | WeatherPhenomenon>("SN");
+  const targetCodes = ["FZ", "SN", "PL", "FG", "TS", "RA", "WS"] as (
+    | WeatherDescriptor
+    | WeatherPhenomenon
+  )[];
+  const [target, setTarget] = useState<WeatherDescriptor | WeatherPhenomenon>(
+    "SN"
+  );
   const [condition, setCondition] = useState<WeatherCondition>("phenomena");
+  const [errOpen, setErrOpen] = useState(false);
+  const [errDetails, setErrDetails] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -53,13 +62,17 @@ export default function Weather() {
     [icao, from, to]
   );
 
-  const { data, isFetching, error, refetch } = useQuery({
+  const { data, isFetching, isFetched, error, refetch } = useQuery({
     queryKey: ["weather-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchWeatherStatistic({
         icao,
         condition,
-        list: target.match(/.{2}/g) as (WeatherDescriptor | WeatherPhenomenon)[] ?? [],
+        list:
+          (target.match(/.{2}/g) as (
+            | WeatherDescriptor
+            | WeatherPhenomenon
+          )[]) ?? [],
         startISO: basicQueryParams.startISO,
         endISO: basicQueryParams.endISO,
       }),
@@ -67,10 +80,23 @@ export default function Weather() {
     placeholderData: keepPreviousData,
   });
 
+  useEffect(() => {
+    const err = error;
+    if (err) {
+      setErrDetails(getErrorMessage(err));
+      setErrOpen(true);
+    }
+  }, [error]);
+
   async function handleFetch() {
     setLoading(true);
     try {
-      await refetch();
+      const r = await refetch();
+      const e = r.error;
+      if (e) {
+        setErrDetails(getErrorMessage(e));
+        setErrOpen(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -88,8 +114,10 @@ export default function Weather() {
       mostFrequentMonth: monthAgg.mostFrequentMonth ?? "JAN",
       mostFrequentHour:
         hourAgg.mostFrequentHour(monthAgg.mostFrequentMonth) ?? "00",
+      isFetched,
+      hasData: (data?.totalCount ?? 0) > 0,
     }),
-    [data, monthAgg, hourAgg]
+    [data, monthAgg, hourAgg, isFetched]
   );
 
   const [yearSel, setYearSel] = useState<"total" | number>("total");
@@ -142,7 +170,7 @@ export default function Weather() {
                   ))}
                 </SelectContent>
               </Select>
-           </div>
+            </div>
           </div>
         }
       />
@@ -154,14 +182,15 @@ export default function Weather() {
             <span>Analytics</span>
             <span>/</span>
             <span className="text-foreground">Weather</span>
-            <Hint text="[hPa]"/>
+            <Hint text="[hPa]" />
           </div>
-          {data && data.totalCount > 0
-            ? <Badge variant="secondary">Summary</Badge>
-            : error === null 
-              ? <Badge variant="destructive">No Data</Badge>
-              : <Badge variant="destructive">Error</Badge>
-          }
+          {data && data.totalCount > 0 ? (
+            <Badge variant="secondary">Summary</Badge>
+          ) : error === null ? (
+            <Badge variant="destructive">No Data</Badge>
+          ) : (
+            <Badge variant="destructive">Error</Badge>
+          )}
         </div>
 
         <ThresholdKpiCardGrid kpis={kpis} />
@@ -354,7 +383,10 @@ export default function Weather() {
                   </thead>
                   <tbody>
                     {hourSeries.map((r) => (
-                      <tr key={r.hour} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
+                      <tr
+                        key={r.hour}
+                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                      >
                         <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
                         <td className="py-2 pl-2 pr-4">{r.count}</td>
                       </tr>
@@ -366,6 +398,14 @@ export default function Weather() {
           </CardContent>
         </Card>
 
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
+
         <Separator />
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
@@ -373,12 +413,14 @@ export default function Weather() {
             Next steps (실전 적용 가이드)
           </div>
           <ul className="list-disc pl-5 space-y-1">
+            <li>현재 SN를 검색하면 FZSN, BLSN같은 descriptor+phenomena 방식</li>
             <li>
-              현재 SN를 검색하면 FZSN, BLSN같은 descriptor+phenomena 방식
+              에선 SN를 잡아내지만 SNPL같인 phenomena+phenomena+...같은 경우엔
+              못잡아냄. 딱 해당 코드만 있는 걸 잡아내도록 설계돼있음
             </li>
-            <li>에선 SN를 잡아내지만 SNPL같인 phenomena+phenomena+...같은 경우엔 못잡아냄. 딱 해당 코드만 있는 걸 잡아내도록 설계돼있음</li>
             <li>
-              SNPL같은 경우 눈이 온걸로 집계하려면 서버측 HAVING절에 = :phenomenonCount를 ＞ 0으로 바꿔버리면 됨
+              SNPL같은 경우 눈이 온걸로 집계하려면 서버측 HAVING절에 =
+              :phenomenonCount를 ＞ 0으로 바꿔버리면 됨
             </li>
           </ul>
         </div>

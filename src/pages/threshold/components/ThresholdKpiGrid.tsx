@@ -1,13 +1,10 @@
 import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import KpiCard from "../../../components/kpi/KpiCard";
-import { getYearsFrom } from "@/lib/date";
+import { dataCoverageHint } from "@/lib/page";
 
 export function ThresholdKpiCardGrid({ kpis }: { kpis: ThresholdKpiValues }) {
-  const { coverageFrom, coverageTo, sampleSize, totalDaysCount, mostFrequentMonth, mostFrequentHour } = kpis;
-  const years = getYearsFrom(coverageFrom, coverageTo);
-    const coverageHint = years.every(y => y !== "")
-      ? `${years[0]} ~ ${years[years.length-1]}`
-      : "Not Searched"
+  const { coverageFrom, coverageTo, sampleSize, totalDaysCount, mostFrequentMonth, mostFrequentHour, isFetched, hasData } = kpis;
+  const coverageHint = dataCoverageHint(coverageFrom, coverageTo, isFetched, hasData);
   
 
   return (

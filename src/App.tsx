@@ -12,7 +12,7 @@ import Altimeter from "./pages/threshold/Altimeter";
 import SidebarNav from "./components/sidebar/SidebarNav";
 import Wind from "./pages/threshold/Wind";
 import Windrose from "./pages/windrose/Windrose";
-import Temperature from "./pages/temperature/temperature";
+import Temperature from "./pages/temperature/Temperature";
 
 // React Query: client & env
 const queryClient = new QueryClient({

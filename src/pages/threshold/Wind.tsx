@@ -19,7 +19,7 @@ import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -29,12 +29,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { getErrorMessage } from "@/lib/page";
+import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 
 export default function Wind() {
   const [icao, setIcao] = useState("KJFK");
   const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
   const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
   const [thresholdKt, setThresholdKt] = useState<number>(10);
+  const [errOpen, setErrOpen] = useState(false);
+  const [errDetails, setErrDetails] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -47,7 +51,7 @@ export default function Wind() {
     [icao, from, to]
   );
 
-  const { data, isFetching, error, refetch } = useQuery({
+  const { data, isFetching, isFetched, error, refetch } = useQuery({
     queryKey: ["wind-threshold-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchThresholdStatistic({
@@ -63,10 +67,23 @@ export default function Wind() {
     placeholderData: keepPreviousData,
   });
 
+  useEffect(() => {
+    const err = error;
+    if (err) {
+      setErrDetails(getErrorMessage(err));
+      setErrOpen(true);
+    }
+  }, [error]);
+
   async function handleFetch() {
     setLoading(true);
     try {
-      await refetch();
+      const r = await refetch();
+      const e = r.error;
+      if (e) {
+        setErrDetails(getErrorMessage(e));
+        setErrOpen(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -84,8 +101,10 @@ export default function Wind() {
       mostFrequentMonth: monthAgg.mostFrequentMonth ?? "JAN",
       mostFrequentHour:
         hourAgg.mostFrequentHour(monthAgg.mostFrequentMonth) ?? "00",
+      isFetched,
+      hasData: isFetched && (data?.totalCount ?? 0) > 0,
     }),
-    [data, monthAgg, hourAgg]
+    [data, monthAgg, hourAgg, isFetched]
   );
 
   const [yearSel, setYearSel] = useState<"total" | number>("total");
@@ -128,7 +147,7 @@ export default function Wind() {
                   setThresholdKt(Math.max(0, Number(e.target.value)))
                 }
               />
-           </div>
+            </div>
           </div>
         }
       />
@@ -140,14 +159,15 @@ export default function Wind() {
             <span>Analytics</span>
             <span>/</span>
             <span className="text-foreground">Wind</span>
-            <Hint text="[kt] include gust"/>
+            <Hint text="[kt] include gust" />
           </div>
-          {data && data.totalCount > 0
-            ? <Badge variant="secondary">Summary</Badge>
-            : error === null 
-              ? <Badge variant="destructive">No Data</Badge>
-              : <Badge variant="destructive">Error</Badge>
-          }
+          {data && data.totalCount > 0 ? (
+            <Badge variant="secondary">Summary</Badge>
+          ) : error === null ? (
+            <Badge variant="destructive">No Data</Badge>
+          ) : (
+            <Badge variant="destructive">Error</Badge>
+          )}
         </div>
 
         <ThresholdKpiCardGrid kpis={kpis} />
@@ -340,7 +360,10 @@ export default function Wind() {
                   </thead>
                   <tbody>
                     {hourSeries.map((r) => (
-                      <tr key={r.hour} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
+                      <tr
+                        key={r.hour}
+                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                      >
                         <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
                         <td className="py-2 pl-2 pr-4">{r.count}</td>
                       </tr>
@@ -352,6 +375,14 @@ export default function Wind() {
           </CardContent>
         </Card>
 
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
+        
         <Separator />
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
@@ -360,7 +391,8 @@ export default function Wind() {
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐 최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
+              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐
+              최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
             </li>
           </ul>
         </div>

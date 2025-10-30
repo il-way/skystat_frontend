@@ -14,16 +14,20 @@ import {
 import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ResponsiveContainer } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import ReactECharts from "echarts-for-react";
 import { buildEchartOptions, buildWindroseDataset } from "./WindroseHelper";
+import { getErrorMessage } from "@/lib/page";
+import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 
 export default function Windrose() {
   const [icao, setIcao] = useState("KJFK");
   const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
   const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
+  const [errOpen, setErrOpen] = useState(false);
+  const [errDetails, setErrDetails] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -48,10 +52,23 @@ export default function Windrose() {
     placeholderData: keepPreviousData,
   });
 
+  useEffect(() => {
+    const err = error;
+    if (err) {
+      setErrDetails(getErrorMessage(err));
+      setErrOpen(true);
+    }
+  }, [error]);
+
   async function handleFetch() {
     setLoading(true);
     try {
-      await refetch();
+      const r = await refetch();
+      const e = r.error;
+      if (e) {
+        setErrDetails(getErrorMessage(e));
+        setErrOpen(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -214,6 +231,14 @@ export default function Windrose() {
             )}
           </CardContent>
         </Card>
+
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
 
         <Separator />
         {/* Next steps */}

@@ -5,4 +5,6 @@ export type DashboardKpiValues = {
   avgVisibilityM: number;
   avgWindSpeedKt: number;
   avgCeilingFt: number;
+  hasData: boolean;
+  isFetched: boolean;
 };
