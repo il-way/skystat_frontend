@@ -1,11 +1,9 @@
-import type { TopbarProps } from "@/types/components/topbar/TopbarProps";
+import type { TopbarProps } from "@/components/topbar/TopbarProps";
 import type { JSX } from "react";
 import { SidebarTrigger } from "../ui/sidebar";
 import { Search } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import Hint from "../common/Hint";
 
 export default function Topbar(props: TopbarProps): JSX.Element {
   const {

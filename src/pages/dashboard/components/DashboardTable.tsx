@@ -1,7 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { useMemo, type JSX } from "react";
-import Hint from "../common/Hint";
-import type { DashboardTableRow } from "@/types/components/dashboard/DashboardTable";
+import Hint from "../../../components/common/Hint";
+import type { DashboardTableRow } from "@/pages/dashboard/types/DashboardTable";
 import { monthShortNameFrom } from "@/lib/date";
 
 export default function DashboardTable({ icao, from, to, rows }: { icao: string, from: string, to: string, rows: DashboardTableRow[] }): JSX.Element {

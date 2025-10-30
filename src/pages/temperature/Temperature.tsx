@@ -1,7 +1,7 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
 import Hint from "@/components/common/Hint";
-import { ThresholdKpiCardGrid } from "@/components/kpi/ThresholdKpiGrid";
+import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,56 +14,54 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { groupHourly, groupMonthly } from "@/lib/count";
 import { localInputToISO, monthShortNames, toLocalInput } from "@/lib/date";
-import { isWeatherDescriptor, isWeatherPhenomenon } from "@/lib/weather";
-import type { WeatherCondition } from "@/types/api/request/common/Condition";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { ThresholdKpiValues } from "@/types/components/kpi/ThresholdKpiValues";
-import type { WeatherDescriptor } from "@/types/weather/WeatherDescriptor";
-import type { WeatherPhenomenon } from "@/types/weather/WeatherPhenomenon";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import type { TemperatureStatisticQueryParams } from "@/api/types/request/statistic/TemperatureStatisticQueryParams";
+import type { TemperaturedKpiValues, ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { TemperatureKpiGrid } from "@/pages/temperature/components/TemperatureKpiGrid";
+import { groupHourly, groupMonthly, groupYearly } from "./TemperatureHelper";
 
-export default function Weather() {
+const TEMP_COLORS = {
+  maxAvg: "#ef4444", // red   — mean T_max
+  mean:   "#22c55e", // green — mean T
+  minAvg: "#60a5fa", // blue  — mean T_min
+} as const;
+
+export default function Temperature() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(
-    toLocalInput(Date.parse("2019-01-01 00:00"))
-  );
-  const [to, setTo] = useState(toLocalInput(Date.parse("2023-01-01 00:00")));
-  const targetCodes = ["FZ", "SN", "PL", "FG", "TS", "RA", "WS"] as (WeatherDescriptor | WeatherPhenomenon)[]
-  const [target, setTarget] = useState<WeatherDescriptor | WeatherPhenomenon>("SN");
-  const [condition, setCondition] = useState<WeatherCondition>("phenomena");
-
+  const [from, setFrom] = useState("2019");
+  const [to, setTo] = useState("2023");
+  
   const [loading, setLoading] = useState(false);
 
-  const basicQueryParams: BasicQueryParams = useMemo(
+  const queryParams: TemperatureStatisticQueryParams = useMemo(
     () => ({
       icao,
-      startISO: localInputToISO(from),
-      endISO: localInputToISO(to),
+      startYear: from,
+      endYear: to,
     }),
     [icao, from, to]
   );
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["wind-threshold-stats", basicQueryParams],
+    queryKey: ["temperature-stats", queryParams],
     queryFn: async () =>
-      MetarStatisticApi.fetchWeatherStatistic({
+      MetarStatisticApi.fetchTemperatureStatistic({
         icao,
-        condition,
-        list: target.match(/.{2}/g) as (WeatherDescriptor | WeatherPhenomenon)[] ?? [],
-        startISO: basicQueryParams.startISO,
-        endISO: basicQueryParams.endISO,
+        startYear: from,
+        endYear: to,
       }),
     enabled: false,
     placeholderData: keepPreviousData,
@@ -78,36 +76,38 @@ export default function Weather() {
     }
   }
 
+  const yearAgg = groupYearly(data);
   const monthAgg = groupMonthly(data);
   const hourAgg = groupHourly(data);
-
-  const kpis: ThresholdKpiValues = useMemo(
-    () => ({
-      coverageFrom: data?.coverageFrom ?? "",
-      coverageTo: data?.coverageTo ?? "",
-      sampleSize: data?.totalCount ?? 0,
-      totalDaysCount: monthAgg.totalDaysCount ?? 0,
-      mostFrequentMonth: monthAgg.mostFrequentMonth ?? "JAN",
-      mostFrequentHour:
-        hourAgg.mostFrequentHour(monthAgg.mostFrequentMonth) ?? "00",
-    }),
-    [data, monthAgg, hourAgg]
-  );
 
   const [yearSel, setYearSel] = useState<"total" | number>("total");
   const [monthSel, setMonthSel] = useState<number>(1);
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
 
-  const monthSeries =
-    yearSel === "total"
+  const monthSeries = yearSel === "total"
       ? monthAgg.totalSeries
       : monthAgg.seriesOf(yearSel as number);
 
-  const hourSeries =
-    yearSel === "total"
-      ? hourAgg.totalOf(monthSel)
-      : hourAgg.byYearMonth(Number(yearSel), monthSel);
+  const monthTable = yearSel === "total"
+      ? monthAgg.totalTable
+      : monthAgg.tableOf(yearSel as number);
+
+  const hourSeries = yearSel === "total"
+      ? hourAgg.totalSeriesOf(monthSel)
+      : hourAgg.seriesOf(Number(yearSel), monthSel);
+
+  const hourTable = yearSel === "total"
+      ? hourAgg.totalTableOf(monthSel)
+      : hourAgg.tableOf(Number(yearSel), monthSel);
+
+  const kpis: TemperaturedKpiValues = {
+    years: yearAgg.years,
+    sampleSize: data?.totalCount ?? 0,
+    annualMean: yearAgg.annualMean,
+    annualMax: yearAgg.annualMax,
+    annualMin: yearAgg.annualMin,
+  };
 
   return (
     <>
@@ -121,32 +121,7 @@ export default function Weather() {
         loading={loading}
         isFetching={isFetching}
         onFetch={handleFetch}
-        rightSlot={
-          <div className="flex items-end gap-3 mr-3">
-            <div className="flex">
-              <div className="flex items-center text-sm px-2">Weather</div>
-              <Select
-                value={target}
-                onValueChange={(v: WeatherDescriptor | WeatherPhenomenon) => {
-                  setTarget(v);
-                  if (isWeatherDescriptor(v)) setCondition("descriptor");
-                  else if (isWeatherPhenomenon(v)) setCondition("phenomena");
-                }}
-              >
-                <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="target" />
-                </SelectTrigger>
-                <SelectContent>
-                  {targetCodes.map((code) => (
-                    <SelectItem key={code} value={code}>
-                      {code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-           </div>
-          </div>
-        }
+        inputType="number"
       />
 
       {/* Content */}
@@ -155,8 +130,8 @@ export default function Weather() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Analytics</span>
             <span>/</span>
-            <span className="text-foreground">Weather</span>
-            <Hint text="[hPa]"/>
+            <span className="text-foreground">Temperature</span>
+            <Hint text="[℃]"/>
           </div>
           {data && data.totalCount > 0
             ? <Badge variant="secondary">Summary</Badge>
@@ -166,7 +141,7 @@ export default function Weather() {
           }
         </div>
 
-        <ThresholdKpiCardGrid kpis={kpis} />
+        <TemperatureKpiGrid kpis={kpis} />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
@@ -215,49 +190,64 @@ export default function Weather() {
             className={`w-full min-w-0 ${mtView === "graph" ? "h-80" : ""}`}
           >
             {mtView === "graph" ? (
-              <ChartAutoSizer>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="monthShortName" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartAutoSizer>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthSeries} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="monthShortName" />
+                  <YAxis unit="°C" allowDecimals />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="dailyMaxAvg" name="mean T_max" 
+                    stroke={TEMP_COLORS.maxAvg}
+                    strokeWidth={2}
+                    dot={{ r: 3, stroke: TEMP_COLORS.maxAvg, fill: "#fff", strokeWidth: 2 }}
+                    activeDot={{ r: 4, stroke: TEMP_COLORS.maxAvg, fill: TEMP_COLORS.maxAvg }} />
+                  <Line type="monotone" dataKey="dailyMeanAvg" name="mean T" 
+                    stroke={TEMP_COLORS.mean}
+                    strokeWidth={2}
+                    dot={{ r: 3, stroke: TEMP_COLORS.mean, fill: "#fff", strokeWidth: 2 }}
+                    activeDot={{ r: 4, stroke: TEMP_COLORS.mean, fill: TEMP_COLORS.mean }}
+                  />
+                  <Line type="monotone" dataKey="dailyMinAvg" name="mean T_min" 
+                    stroke={TEMP_COLORS.minAvg}
+                    strokeWidth={2}
+                    dot={{ r: 3, stroke: TEMP_COLORS.minAvg, fill: "#fff", strokeWidth: 2 }}
+                    activeDot={{ r: 4, stroke: TEMP_COLORS.minAvg, fill: TEMP_COLORS.minAvg }} />
+                </LineChart>
+              </ResponsiveContainer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <colgroup>
-                    <col className="w-1/2" />
-                    <col className="w-1/2" />
+                    <col className="w-1/6" />
+                    <col className="w-1/6" />
+                    <col className="w-1/6" />
+                    <col className="w-1/6" />
+                    <col className="w-1/6" />
+                    <col className="w-1/6" />
                   </colgroup>
+
                   <thead className="text-left text-muted-foreground border-b">
                     <tr>
                       <th className="py-2 pr-4">Month</th>
-                      <th className="py-2 pr-4">Count</th>
+                      <th className="py-2 pr-4">T</th>
+                      <th className="py-2 pr-4">T̄_max</th>
+                      <th className="py-2 pr-4">T̄_min</th>
+                      <th className="py-2 pr-4">T_max</th>
+                      <th className="py-2 pr-4">T_min</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {monthSeries.map((r) => (
-                      <tr
-                        key={r.monthShortName}
-                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
-                      >
-                        <td className="py-2 pl-2 pr-4">{r.monthShortName}</td>
-                        <td className="py-2 pl-2 pr-4">{r.count}</td>
+                    {monthTable.map((r) => (
+                      <tr key={r.month} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
+                        <td className="py-2 pl-2 pr-4">{r.monthShotrName}</td>
+                        <td className="py-2 pl-2 pr-4">{r.mean}</td>
+                        <td className="py-2 pl-2 pr-4">{r.meanMax}</td>
+                        <td className="py-2 pl-2 pr-4">{r.meanMin}</td>
+                        <td className="py-2 pl-2 pr-4">{r.monthlyMax}</td>
+                        <td className="py-2 pl-2 pr-4">{r.monthlyMin}</td>
                       </tr>
                     ))}
-                    <tr className="font-medium">
-                      <td className="py-2 pl-2 pr-4">TOTAL</td>
-                      <td className="py-2 pl-2 pr-4">
-                        {monthSeries.reduce((a, b) => a + b.count, 0)}
-                      </td>
-                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -327,38 +317,40 @@ export default function Weather() {
             className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
           >
             {hrView === "graph" ? (
-              <ChartAutoSizer>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={hourSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartAutoSizer>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={hourSeries} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis unit="°C" allowDecimals />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="mean" name="mean T" dot />
+                </LineChart>
+              </ResponsiveContainer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <colgroup>
-                    <col className="w-1/2" />
-                    <col className="w-1/2" />
+                    <col className="w-1/4" />
+                    <col className="w-1/4" />
+                    <col className="w-1/4" />
+                    <col className="w-1/4" />
                   </colgroup>
                   <thead className="text-left text-muted-foreground border-b">
                     <tr>
                       <th className="py-2 pl-2 pr-4">Hour</th>
-                      <th className="py-2 pl-2 pr-4">Count</th>
+                      <th className="py-2 pl-2 pr-4">T</th>
+                      <th className="py-2 pl-2 pr-4">T_max</th>
+                      <th className="py-2 pl-2 pr-4">T_min</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {hourSeries.map((r) => (
+                    {hourTable.map((r) => (
                       <tr key={r.hour} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
                         <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
-                        <td className="py-2 pl-2 pr-4">{r.count}</td>
+                        <td className="py-2 pl-2 pr-4">{r.mean}</td>
+                        <td className="py-2 pl-2 pr-4">{r.max}</td>
+                        <td className="py-2 pl-2 pr-4">{r.min}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -367,7 +359,7 @@ export default function Weather() {
             )}
           </CardContent>
         </Card>
-
+  
         <Separator />
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
@@ -376,11 +368,7 @@ export default function Weather() {
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              현재 SN를 검색하면 FZSN, BLSN같은 descriptor+phenomena 방식
-            </li>
-            <li>에선 SN를 잡아내지만 SNPL같인 phenomena+phenomena+...같은 경우엔 못잡아냄. 딱 해당 코드만 있는 걸 잡아내도록 설계돼있음</li>
-            <li>
-              SNPL같은 경우 눈이 온걸로 집계하려면 서버측 HAVING절에 = :phenomenonCount를 ＞ 0으로 바꿔버리면 됨
+              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐 최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
             </li>
           </ul>
         </div>

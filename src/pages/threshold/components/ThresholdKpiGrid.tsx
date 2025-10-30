@@ -1,5 +1,5 @@
-import type { ThresholdKpiValues } from "@/types/components/kpi/ThresholdKpiValues";
-import KpiCard from "./KpiCard";
+import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
+import KpiCard from "../../../components/kpi/KpiCard";
 import { getYearsFrom } from "@/lib/date";
 
 export function ThresholdKpiCardGrid({ kpis }: { kpis: ThresholdKpiValues }) {

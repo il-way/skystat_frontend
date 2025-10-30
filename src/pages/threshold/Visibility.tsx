@@ -1,7 +1,7 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
 import Hint from "@/components/common/Hint";
-import { ThresholdKpiCardGrid } from "@/components/kpi/ThresholdKpiGrid";
+import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,15 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { groupHourly, groupMonthly } from "@/lib/count";
-import { localInputToISO, monthShortNames, toLocalInput } from "@/lib/date";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { ThresholdKpiValues } from "@/types/components/kpi/ThresholdKpiValues";
+import {
+  localInputToISO,
+  monthShortNames,
+  toLocalInput,
+  toUTCInput,
+  utcInputToISO,
+} from "@/lib/date";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
@@ -30,34 +36,32 @@ import {
   YAxis,
 } from "recharts";
 
-export default function Wind() {
+export default function Visibility() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(
-    toLocalInput(Date.parse("2019-01-01 00:00"))
-  );
-  const [to, setTo] = useState(toLocalInput(Date.parse("2023-01-01 00:00")));
-  const [thresholdKt, setThresholdKt] = useState<number>(10);
+  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
+  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
+  const [thresholdM, setThresholdM] = useState<number>(800);
 
   const [loading, setLoading] = useState(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
       icao,
-      startISO: localInputToISO(from),
-      endISO: localInputToISO(to),
+      startISO: utcInputToISO(from),
+      endISO: utcInputToISO(to),
     }),
     [icao, from, to]
   );
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["wind-threshold-stats", basicQueryParams],
+    queryKey: ["visibility-threshold-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchThresholdStatistic({
         icao,
-        field: "windpeak",
-        comparison: "GTE",
-        threshold: thresholdKt,
-        unit: "KT",
+        field: "visibility",
+        comparison: "LTE",
+        threshold: thresholdM,
+        unit: "METERS",
         startISO: basicQueryParams.startISO,
         endISO: basicQueryParams.endISO,
       }),
@@ -120,17 +124,17 @@ export default function Wind() {
         rightSlot={
           <div className="flex items-end gap-3 mr-3">
             <div className="flex">
-              <div className="flex items-center text-sm px-2">Wind ≥</div>
+              <div className="flex items-center text-sm px-2">Visibility ≤</div>
               <input
                 type="number"
                 min={0}
                 className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
-                value={thresholdKt}
+                value={thresholdM}
                 onChange={(e) =>
-                  setThresholdKt(Math.max(0, Number(e.target.value)))
+                  setThresholdM(Math.max(0, Number(e.target.value)))
                 }
               />
-           </div>
+            </div>
           </div>
         }
       />
@@ -141,10 +145,16 @@ export default function Wind() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Analytics</span>
             <span>/</span>
-            <span className="text-foreground">Wind</span>
-            <Hint text="[kt] include gust"/>
+            <span className="text-foreground">Visibility</span>
+            <Hint text="[m]" />
           </div>
-          <Badge variant="secondary">Summary</Badge>
+          {data && data.totalCount > 0 ? (
+            <Badge variant="secondary">Summary</Badge>
+          ) : error === null ? (
+            <Badge variant="destructive">No Data</Badge>
+          ) : (
+            <Badge variant="destructive">Error</Badge>
+          )}
         </div>
 
         <ThresholdKpiCardGrid kpis={kpis} />
@@ -337,7 +347,10 @@ export default function Wind() {
                   </thead>
                   <tbody>
                     {hourSeries.map((r) => (
-                      <tr key={r.hour} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
+                      <tr
+                        key={r.hour}
+                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                      >
                         <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
                         <td className="py-2 pl-2 pr-4">{r.count}</td>
                       </tr>
@@ -357,7 +370,8 @@ export default function Wind() {
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐 최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
+              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐
+              최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
             </li>
           </ul>
         </div>

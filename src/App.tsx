@@ -4,16 +4,15 @@ import {
   QueryClientProvider,
   keepPreviousData,
 } from "@tanstack/react-query";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/dashboard/Dashboard";
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import Visibility from "./pages/Visibility";
-import Temperature from "./pages/Temperature";
-import Weather from "./pages/Weather";
-import Altimeter from "./pages/Altimeter";
+import Visibility from "./pages/threshold/Visibility";
+import Weather from "./pages/weather/Weather";
+import Altimeter from "./pages/threshold/Altimeter";
 import SidebarNav from "./components/sidebar/SidebarNav";
-import { ScopeProvider } from "./context/Scope";
-import Wind from "./pages/Wind";
+import Wind from "./pages/threshold/Wind";
 import Windrose from "./pages/windrose/Windrose";
+import Temperature from "./pages/temperature/temperature";
 
 // React Query: client & env
 const queryClient = new QueryClient({
@@ -37,7 +36,6 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SidebarProvider>
-        {/* <ScopeProvider> */}
           <Routes>
             <Route element={<AppLayout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
@@ -51,7 +49,6 @@ export default function App() {
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </Routes>
-        {/* </ScopeProvider> */}
       </SidebarProvider>
     </QueryClientProvider>
   );

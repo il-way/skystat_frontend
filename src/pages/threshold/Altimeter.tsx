@@ -1,7 +1,7 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
 import Hint from "@/components/common/Hint";
-import { ThresholdKpiCardGrid } from "@/components/kpi/ThresholdKpiGrid";
+import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { groupHourly, groupMonthly } from "@/lib/count";
-import { localInputToISO, monthShortNames, toLocalInput } from "@/lib/date";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { ThresholdKpiValues } from "@/types/components/kpi/ThresholdKpiValues";
+import {monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
@@ -30,34 +30,32 @@ import {
   YAxis,
 } from "recharts";
 
-export default function Visibility() {
+export default function Altimeter() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(
-    toLocalInput(Date.parse("2019-01-01 00:00"))
-  );
-  const [to, setTo] = useState(toLocalInput(Date.parse("2023-01-01 00:00")));
-  const [thresholdM, setThresholdM] = useState<number>(800);
+  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
+  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
+  const [thresholdHpa, setThresholdHpa] = useState<number>(996);
 
   const [loading, setLoading] = useState(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
       icao,
-      startISO: localInputToISO(from),
-      endISO: localInputToISO(to),
+      startISO: utcInputToISO(from),
+      endISO: utcInputToISO(to),
     }),
     [icao, from, to]
   );
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["visibility-threshold-stats", basicQueryParams],
+    queryKey: ["altimeter-threshold-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchThresholdStatistic({
         icao,
-        field: "visibility",
+        field: "altimeter",
         comparison: "LTE",
-        threshold: thresholdM,
-        unit: "METERS",
+        threshold: thresholdHpa,
+        unit: "HPA",
         startISO: basicQueryParams.startISO,
         endISO: basicQueryParams.endISO,
       }),
@@ -120,17 +118,17 @@ export default function Visibility() {
         rightSlot={
           <div className="flex items-end gap-3 mr-3">
             <div className="flex">
-              <div className="flex items-center text-sm px-2">Visibility ≤</div>
+              <div className="flex items-center text-sm px-2">Altimeter ≤</div>
               <input
                 type="number"
                 min={0}
                 className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
-                value={thresholdM}
+                value={thresholdHpa}
                 onChange={(e) =>
-                  setThresholdM(Math.max(0, Number(e.target.value)))
+                  setThresholdHpa(Math.max(0, Number(e.target.value)))
                 }
               />
-            </div>
+           </div>
           </div>
         }
       />
@@ -141,15 +139,15 @@ export default function Visibility() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Analytics</span>
             <span>/</span>
-            <span className="text-foreground">Visibility</span>
-            <Hint text="[m]"/>
+            <span className="text-foreground">Altimeter</span>
+            <Hint text="[hPa]"/>
           </div>
           {data && data.totalCount > 0
             ? <Badge variant="secondary">Summary</Badge>
             : error === null 
               ? <Badge variant="destructive">No Data</Badge>
               : <Badge variant="destructive">Error</Badge>
-          }          
+          }
         </div>
 
         <ThresholdKpiCardGrid kpis={kpis} />
@@ -313,20 +311,18 @@ export default function Visibility() {
             className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
           >
             {hrView === "graph" ? (
-              <ChartAutoSizer>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={hourSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartAutoSizer>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={hourSeries}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

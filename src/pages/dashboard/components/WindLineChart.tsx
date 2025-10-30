@@ -1,5 +1,5 @@
 import type { WindLineProps } from "@/types/components/charts/WindLineProps";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { JSX } from "react";
 

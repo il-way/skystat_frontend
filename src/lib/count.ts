@@ -1,7 +1,7 @@
-import type { ObservationStatisticResponse } from "@/types/api/response/statistic/ObservationStatisticResponse";
+import type { ObservationStatisticResponse } from "@/api/types/response/statistic/ObservationStatisticResponse";
 import { monthShortNames } from "./date";
-import type { MonthlyCount } from "@/types/api/response/common/MonthlyCount";
-import type { HourlyCount } from "@/types/api/response/common/HourlyCount";
+import type { MonthlyCount } from "@/api/types/response/common/MonthlyCount";
+import type { HourlyCount } from "@/api/types/response/common/HourlyCount";
 import type { MonthShortName } from "@/types/dates/Dates";
 
 export function groupMonthly(resp?: ObservationStatisticResponse) {

@@ -1,13 +1,14 @@
-import type { WindroseResponse } from "@/types/api/response/windrose/WindroseResponse";
+import type { WindroseResponse } from "@/api/types/response/windrose/WindroseResponse";
 import type { WindroseDataset } from "./type/EchartDataset";
 import { monthShortNameFrom, monthShortNames } from "@/lib/date";
 import type { M } from "node_modules/framer-motion/dist/types.d-BJcRxCew";
 import type { MonthShortName } from "@/types/dates/Dates";
-import { round2 } from "@/lib/temperature";
+import { round2 } from "@/lib/math";
 
 export function buildWindroseDataset(resp?: WindroseResponse) {
   const base = emptyDataset();
-  if (!resp || resp.data.length === 0) return base;
+  if (!resp) return base;
+  if (resp.data.length === 0) return base;
 
   base.speedBins = [...resp.speedBins];
   base.directionBins = [...resp.directionBins];
@@ -26,7 +27,7 @@ export function buildWindroseDataset(resp?: WindroseResponse) {
     const monthName = monthShortNameFrom(data.month);
     if (!base.series[monthName]) continue;
     initMonthSeries(monthName);
-    
+
     const { sbIndex, dbIndex, rate } = data;
     if (sbIndex < 0 || sbIndex >= base.speedBins.length) continue;
     if (dbIndex < 0 || dbIndex >= base.directionBins.length) continue;
@@ -77,7 +78,7 @@ export function buildEchartOptions(dataset: WindroseDataset, month: number) {
       trigger: 'item',
       textStyle: { color: '#333' },
     },
-    color: ["#0001F7", "#0284c7", "#00B8FE", "#00FF68", "#BEFE00", "#FFFF00", "#FFA800", "#E10100"],
+    color: ["#0001F7","#0A7BFF","#00B8FE","#00FF68","#BEFE00","#FFFF00","#FFA800","#E10100"],
     angleAxis: {
       type: 'category',
       data: directionBins,
@@ -112,8 +113,8 @@ export function buildEchartOptions(dataset: WindroseDataset, month: number) {
       radius: ['13%', '75%'],
     },
     series: [
-      ...nonCalmSeries,
       { type: 'bar', coordinateSystem: 'polar', name: "CALM", stack: 'a' },
+      ...nonCalmSeries,
       {
         type: 'pie',
         center: ['50%', '55%'],

@@ -1,32 +1,30 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
-import WindLineChart from "@/components/chart/WindLineChart";
-import { DashboardKpiCardGrid } from "@/components/kpi/DashboardKpiGrid";
-import DashboardTable from "@/components/table/DashboardTable";
+import WindLineChart from "@/pages/dashboard/components/WindLineChart";
+import { DashboardKpiCardGrid } from "@/pages/dashboard/components/DashboardKpiGrid";
+import DashboardTable from "@/pages/dashboard/components/DashboardTable";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { localInputToISO, monthShortNameFrom, toLocalInput } from "@/lib/date";
-import { round2 } from "@/lib/temperature";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { WindLineData } from "@/types/components/charts/WindLineData";
-import type { DashboardKpiValues } from "@/types/components/kpi/DashboardKpiValues";
+import { monthShortNameFrom, monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import type { DashboardKpiValues } from "@/pages/dashboard/types/DashboardKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import type { WindLineData } from "./types/WindLineData";
+import { round2 } from "@/lib/math";
 
 export default function Dashboard() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(toLocalInput(Date.parse("2019-01-01 00:00")));
-  const [to, setTo] = useState(toLocalInput(Date.parse("2023-01-01 00:00")));
+  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
+  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
   const [loading, setLoading] = useState(false);
-
-  const [rows, setRows] = useState([]);
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
       icao,
-      startISO: localInputToISO(from),
-      endISO: localInputToISO(to),
+      startISO: utcInputToISO(from),
+      endISO: utcInputToISO(to),
     }),
     [icao, from, to]
   );
@@ -47,7 +45,7 @@ export default function Dashboard() {
     placeholderData: keepPreviousData,
   });
 
-  const { data: avgWind, refetch: avgWindRefetch } = useQuery({
+  const { data: avgWind, error: avgWindError, refetch: avgWindRefetch } = useQuery({
     queryKey: ["dashboard-avg-wind", basicQueryParams],
     queryFn: async () => MetarStatisticApi.fetchAverageWindSpeedMonthly(basicQueryParams),
     enabled: false,
@@ -78,20 +76,7 @@ export default function Dashboard() {
   );
 
   const windLineData: WindLineData[] = useMemo(() => {
-    const data: WindLineData[] = [
-      { month: "JAN", wind: 0 },
-      { month: "FEB", wind: 0 },
-      { month: "MAR", wind: 0 },
-      { month: "APR", wind: 0 },
-      { month: "MAY", wind: 0 },
-      { month: "JUN", wind: 0 },
-      { month: "JUL", wind: 0 },
-      { month: "AUG", wind: 0 },
-      { month: "SEP", wind: 0 },
-      { month: "OCT", wind: 0 },
-      { month: "NOV", wind: 0 },
-      { month: "DEC", wind: 0 },
-    ];
+    const data: WindLineData[] = monthShortNames.map(m => ({ month: m, wind: 0 }));
     avgWind?.monthly.forEach((m,i) => data[i] = { 
       month: monthShortNameFrom(m.month), 
       wind: round2(m.value) ?? 0,
@@ -125,7 +110,7 @@ export default function Dashboard() {
           </div>
           {avg && avg.totalCount > 0
             ? <Badge variant="secondary">Summary</Badge>
-            : avgError === null 
+            : (avgError === null && tableError === null && avgWindError === null)
               ? <Badge variant="destructive">No Data</Badge>
               : <Badge variant="destructive">Error</Badge>
           }

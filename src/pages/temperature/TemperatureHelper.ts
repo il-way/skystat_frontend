@@ -1,9 +1,10 @@
-import type { TemperatureStatisticResponse } from "@/types/api/response/statistic/TemperatureStatisticResponse";
-import { monthShortNameFrom } from "./date";
-import type { MonthlyTemperatureStat } from "@/types/api/response/common/MonthlyTemperatureStat";
+import type { TemperatureStatisticResponse } from "@/api/types/response/statistic/TemperatureStatisticResponse";
+import { monthShortNameFrom } from "../../lib/date";
+import type { MonthlyTemperatureStat } from "@/api/types/response/common/MonthlyTemperatureStat";
 import type { MonthlyTableRow } from "@/types/temperature/MonthlyTableRow";
 import type { HourlyTableRow } from "@/types/temperature/HourlyTableRow";
-import type { HourlyTemperatureStat } from "@/types/api/response/common/HourlyTemperatureStat";
+import type { HourlyTemperatureStat } from "@/api/types/response/common/HourlyTemperatureStat";
+import { round2 } from "@/lib/math";
 
 const H24 = Array.from({ length: 24}, (_, i) => i);
 
@@ -243,10 +244,6 @@ function hourlyTable(resp: TemperatureStatisticResponse | undefined,
       min: round2(Math.min(...arr.map((x) => x.minTempAtHour))),
     };
   });  
-}
-
-export function round2(n: number | null | undefined) {
-  return (n == null ? null : Math.round(n*100)/100);
 }
 
 function avg(xs: (number | null |undefined)[]) {

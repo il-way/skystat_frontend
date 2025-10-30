@@ -1,6 +1,6 @@
-import { round2 } from "@/lib/temperature";
-import KpiCard from "./KpiCard";
-import type { TemperaturedKpiValues } from "@/types/components/kpi/TemperaturedKpiValues";
+import { round2 } from "@/lib/math";
+import KpiCard from "../../../components/kpi/KpiCard";
+import type { TemperaturedKpiValues } from "@/pages/temperature/types/TemperaturedKpiValues";
 
 export function TemperatureKpiGrid({ kpis }: { kpis: TemperaturedKpiValues }) {
   const { years, sampleSize, annualMean, annualMax, annualMin } = kpis;

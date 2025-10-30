@@ -1,5 +1,5 @@
 import { buildMetarInventoryURL } from "@/lib/url";
-import type { DatasetCoverage } from "@/types/api/response/common/DatasetCoverage";
+import type { DatasetCoverage } from "@/api/types/response/common/DatasetCoverage";
 
 export class MetarInventory {
 

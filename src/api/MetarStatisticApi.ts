@@ -8,18 +8,18 @@ import {
   buildWindRoseURL,
   buildWindSpeedAverageMonthlyURL,
 } from "@/lib/url";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { CloudStatisticQueryParams } from "@/types/api/request/statistic/CloudStatisticQueryParams";
-import type { TemperatureStatisticQueryParams } from "@/types/api/request/statistic/TemperatureStatisticQueryParams";
-import type { ThresholdStatisticQueryParams } from "@/types/api/request/statistic/ThresholdStatisticQueryParams";
-import type { WeatherStatisticQueryParams } from "@/types/api/request/statistic/WeatherStatisticQueryParams";
-import type { WindRoseQueryParams } from "@/types/api/request/statistic/WindRoseQueryParams";
-import type { AverageSummaryResponse } from "@/types/api/response/statistic/AverageSummaryResponse";
-import type { AverageWindSpeedMonthlyResponse } from "@/types/api/response/statistic/AverageWindSpeedMonthlyResponse";
-import type { ObservationStatisticResponse } from "@/types/api/response/statistic/ObservationStatisticResponse";
-import type { TemperatureStatisticResponse } from "@/types/api/response/statistic/TemperatureStatisticResponse";
-import type { WindroseResponse } from "@/types/api/response/windrose/WindroseResponse";
-import type { DashboardTableRow } from "@/types/components/dashboard/DashboardTable";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import type { CloudStatisticQueryParams } from "@/api/types/request/statistic/CloudStatisticQueryParams";
+import type { TemperatureStatisticQueryParams } from "@/api/types/request/statistic/TemperatureStatisticQueryParams";
+import type { ThresholdStatisticQueryParams } from "@/api/types/request/statistic/ThresholdStatisticQueryParams";
+import type { WeatherStatisticQueryParams } from "@/api/types/request/statistic/WeatherStatisticQueryParams";
+import type { WindRoseQueryParams } from "@/api/types/request/statistic/WindRoseQueryParams";
+import type { AverageSummaryResponse } from "@/api/types/response/statistic/AverageSummaryResponse";
+import type { AverageWindSpeedMonthlyResponse } from "@/api/types/response/statistic/AverageWindSpeedMonthlyResponse";
+import type { ObservationStatisticResponse } from "@/api/types/response/statistic/ObservationStatisticResponse";
+import type { TemperatureStatisticResponse } from "@/api/types/response/statistic/TemperatureStatisticResponse";
+import type { WindroseResponse } from "@/api/types/response/windrose/WindroseResponse";
+import type { DashboardTableRow } from "@/pages/dashboard/types/DashboardTable";
 
 export class MetarStatisticApi {
   static host = "/api";

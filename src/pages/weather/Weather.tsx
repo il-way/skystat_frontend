@@ -1,7 +1,7 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
 import Hint from "@/components/common/Hint";
-import { ThresholdKpiCardGrid } from "@/components/kpi/ThresholdKpiGrid";
+import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,12 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { groupHourly, groupMonthly } from "@/lib/count";
-import { localInputToISO, monthShortNames, toLocalInput } from "@/lib/date";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { ThresholdKpiValues } from "@/types/components/kpi/ThresholdKpiValues";
+import { localInputToISO, monthShortNames, toLocalInput, toUTCInput, utcInputToISO } from "@/lib/date";
+import type { WeatherCondition } from "@/api/types/request/common/Condition";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
+import type { WeatherDescriptor } from "@/pages/weather/types/WeatherDescriptor";
+import type { WeatherPhenomenon } from "@/pages/weather/types/WeatherPhenomenon";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
@@ -29,35 +32,34 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { isWeatherDescriptor, isWeatherPhenomenon } from "./WeatherHelper";
 
-export default function Altimeter() {
+export default function Weather() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(
-    toLocalInput(Date.parse("2019-01-01 00:00"))
-  );
-  const [to, setTo] = useState(toLocalInput(Date.parse("2023-01-01 00:00")));
-  const [thresholdHpa, setThresholdHpa] = useState<number>(10);
+  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
+  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
+  const targetCodes = ["FZ", "SN", "PL", "FG", "TS", "RA", "WS"] as (WeatherDescriptor | WeatherPhenomenon)[]
+  const [target, setTarget] = useState<WeatherDescriptor | WeatherPhenomenon>("SN");
+  const [condition, setCondition] = useState<WeatherCondition>("phenomena");
 
   const [loading, setLoading] = useState(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
       icao,
-      startISO: localInputToISO(from),
-      endISO: localInputToISO(to),
+      startISO: utcInputToISO(from),
+      endISO: utcInputToISO(to),
     }),
     [icao, from, to]
   );
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["altimeter-threshold-stats", basicQueryParams],
+    queryKey: ["weather-stats", basicQueryParams],
     queryFn: async () =>
-      MetarStatisticApi.fetchThresholdStatistic({
+      MetarStatisticApi.fetchWeatherStatistic({
         icao,
-        field: "altimeter",
-        comparison: "LTE",
-        threshold: thresholdHpa,
-        unit: "HPA",
+        condition,
+        list: target.match(/.{2}/g) as (WeatherDescriptor | WeatherPhenomenon)[] ?? [],
         startISO: basicQueryParams.startISO,
         endISO: basicQueryParams.endISO,
       }),
@@ -120,16 +122,26 @@ export default function Altimeter() {
         rightSlot={
           <div className="flex items-end gap-3 mr-3">
             <div className="flex">
-              <div className="flex items-center text-sm px-2">Altimeter ≤</div>
-              <input
-                type="number"
-                min={0}
-                className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
-                value={thresholdHpa}
-                onChange={(e) =>
-                  setThresholdHpa(Math.max(0, Number(e.target.value)))
-                }
-              />
+              <div className="flex items-center text-sm px-2">Weather</div>
+              <Select
+                value={target}
+                onValueChange={(v: WeatherDescriptor | WeatherPhenomenon) => {
+                  setTarget(v);
+                  if (isWeatherDescriptor(v)) setCondition("descriptor");
+                  else if (isWeatherPhenomenon(v)) setCondition("phenomena");
+                }}
+              >
+                <SelectTrigger className="h-8 w-28">
+                  <SelectValue placeholder="target" />
+                </SelectTrigger>
+                <SelectContent>
+                  {targetCodes.map((code) => (
+                    <SelectItem key={code} value={code}>
+                      {code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
            </div>
           </div>
         }
@@ -141,7 +153,7 @@ export default function Altimeter() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Analytics</span>
             <span>/</span>
-            <span className="text-foreground">Altimeter</span>
+            <span className="text-foreground">Weather</span>
             <Hint text="[hPa]"/>
           </div>
           {data && data.totalCount > 0
@@ -313,18 +325,20 @@ export default function Altimeter() {
             className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
           >
             {hrView === "graph" ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={hourSeries}
-                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hour" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="count" />
-                </BarChart>
-              </ResponsiveContainer>
+              <ChartAutoSizer>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={hourSeries}
+                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hour" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartAutoSizer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -360,7 +374,11 @@ export default function Altimeter() {
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐 최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
+              현재 SN를 검색하면 FZSN, BLSN같은 descriptor+phenomena 방식
+            </li>
+            <li>에선 SN를 잡아내지만 SNPL같인 phenomena+phenomena+...같은 경우엔 못잡아냄. 딱 해당 코드만 있는 걸 잡아내도록 설계돼있음</li>
+            <li>
+              SNPL같은 경우 눈이 온걸로 집계하려면 서버측 HAVING절에 = :phenomenonCount를 ＞ 0으로 바꿔버리면 됨
             </li>
           </ul>
         </div>

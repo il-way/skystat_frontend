@@ -11,48 +11,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { localInputToISO, monthShortNames, toLocalInput } from "@/lib/date";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
+import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-import {
-  BarChart,
-  Customized,
-  Legend,
-  PolarAngleAxis,
-  PolarGrid,
-  RadialBar,
-  RadialBarChart,
-  ResponsiveContainer,
-  Sector,
-  Tooltip,
-} from "recharts";
-import { WindroseTooltip } from "./WindroseTooltip";
-// import { CenterCalmLabel } from "./CenterCalmLabel";
+import { useMemo, useState } from "react";
+import { ResponsiveContainer } from "recharts";
 import { Separator } from "@/components/ui/separator";
 import ReactECharts from "echarts-for-react";
 import { buildEchartOptions, buildWindroseDataset } from "./WindroseHelper";
 
 export default function Windrose() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(
-    toLocalInput(Date.parse("2019-01-01 00:00"))
-  );
-  const [to, setTo] = useState(toLocalInput(Date.parse("2023-01-01 00:00")));
+  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
+  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
 
   const [loading, setLoading] = useState(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
       icao,
-      startISO: localInputToISO(from),
-      endISO: localInputToISO(to),
+      startISO: utcInputToISO(from),
+      endISO: utcInputToISO(to),
     }),
     [icao, from, to]
   );
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["altimeter-threshold-stats", basicQueryParams],
+    queryKey: ["windrose-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchWindRoseStatistic({
         icao,
@@ -75,10 +60,10 @@ export default function Windrose() {
   const [monthSel, setMonthSel] = useState<number>(1);
   const [view, setView] = useState<"graph" | "table">("graph");
   const dataset = useMemo(() => buildWindroseDataset(data), [data]);
-  const echartOptions = useMemo(() => buildEchartOptions(dataset, monthSel), [
-    dataset,
-    monthSel,
-  ]);
+  const echartOptions = useMemo(
+    () => buildEchartOptions(dataset, monthSel),
+    [dataset, monthSel]
+  );
 
   const hasData =
     dataset.directionBins.length > 0 &&
@@ -122,7 +107,7 @@ export default function Windrose() {
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
             <CardTitle className="text-base">
-              Windrose (gust not included)
+              Windrose (gust not included) [%]
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select
@@ -193,29 +178,34 @@ export default function Windrose() {
                   <thead className="text-left text-muted-foreground border-b">
                     <tr>
                       <th className="py-2 pr-4 text-right">Direction</th>
-                      {dataset.speedBins.filter(s => s.toUpperCase()!=="CALM").map((s) => (
-                        <th key={s} className="py-2 pr-4 text-center">
-                          {s}
-                        </th>
-                      ))}
+                      {dataset.speedBins
+                        .filter((s) => s.toUpperCase() !== "CALM")
+                        .map((s) => (
+                          <th key={s} className="py-2 pr-4 text-center">
+                            {s}
+                          </th>
+                        ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {dataset.directionBins.map((r,i) => (
+                    {dataset.directionBins.map((r, i) => (
                       <tr
                         key={r}
                         className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
                       >
-                        <td className="py-2 pr-4 font-medium text-right">{r}</td>
+                        <td className="py-2 pr-4 font-medium text-right">
+                          {r}
+                        </td>
                         {dataset.series[monthShortNames[monthSel - 1]]
-                          .filter(s => s.speedBin.toUpperCase()!=="CALM")
+                          .filter((s) => s.speedBin.toUpperCase() !== "CALM")
                           .map((s) => (
-                            <td key={s.speedBin} className="py-2 pl-2 pr-4 text-center">
+                            <td
+                              key={s.speedBin}
+                              className="py-2 pl-2 pr-4 text-center"
+                            >
                               {s.data[i]}
                             </td>
-                          ))
-                        
-                        }
+                          ))}
                       </tr>
                     ))}
                   </tbody>

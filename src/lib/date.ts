@@ -1,5 +1,34 @@
 import type { MonthIdx, MonthShortName, MonthValue } from "@/types/dates/Dates";
 
+export function toUTCInput(dt: number | string | Date): string {
+  try {
+    const d = new Date(dt);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const yyyy = d.getUTCFullYear();
+    const mm = pad(d.getUTCMonth() + 1);
+    const dd = pad(d.getUTCDate());
+    const hh = pad(d.getUTCHours());
+    const mi = pad(d.getUTCMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  } catch {
+    return "";
+  }
+}
+
+export function utcInputToISO(local: string): string {
+  try {
+    const [datePart, timePart] = local.split("T");
+    if (!datePart || !timePart) return "";
+    const [y, m, d] = datePart.split("-").map(Number);
+    const [hh, mi] = timePart.split(":").map(Number);
+    const ms = Date.UTC(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mi ?? 0, 0, 0);
+    return new Date(ms).toISOString();
+  } catch {
+    return "";
+  }
+}
+
+
 export function toLocalInput(dt: number | string | Date): string {
   try {
     const d = new Date(dt);
@@ -37,4 +66,18 @@ export function getYearsFrom(coverageFrom: string, coverageTo: string) {
   const to = localInputToISO(coverageTo);
 
   return [from.slice(0,4), to.slice(0,4)];
+}
+
+export function validatePeriod(from: string, to: string) {
+  const fromDt = new Date(from).getTime();
+  const toDt = new Date(to).getTime();
+  if (isNaN(fromDt) || isNaN(toDt)) {
+    throw new Error("Invalid date format");
+  }
+
+  if (fromDt > toDt) {
+    throw new Error("Invalid period: Start date must be before end date");
+  }
+
+  return fromDt < toDt;
 }

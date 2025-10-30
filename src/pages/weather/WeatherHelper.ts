@@ -1,5 +1,5 @@
-import type { WeatherDescriptor } from "@/types/weather/WeatherDescriptor";
-import type { WeatherPhenomenon } from "@/types/weather/WeatherPhenomenon";
+import type { WeatherDescriptor } from "@/pages/weather/types/WeatherDescriptor";
+import type { WeatherPhenomenon } from "@/pages/weather/types/WeatherPhenomenon";
 
 export const WEATHER_DESCRIPTORS = new Set<WeatherDescriptor>(["BC","BL","DR","DL","FZ","MI","PR","SH","TS","VC"] as const);
 

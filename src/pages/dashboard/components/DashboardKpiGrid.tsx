@@ -1,5 +1,5 @@
-import type { DashboardKpiValues } from "@/types/components/kpi/DashboardKpiValues";
-import KpiCard from "./KpiCard";
+import type { DashboardKpiValues } from "@/pages/dashboard/types/DashboardKpiValues";
+import KpiCard from "../../../components/kpi/KpiCard";
 import { getYearsFrom } from "@/lib/date";
 
 export function DashboardKpiCardGrid({ kpis }: { kpis: DashboardKpiValues }) {

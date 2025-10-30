@@ -1,7 +1,7 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
 import Hint from "@/components/common/Hint";
-import { ThresholdKpiCardGrid } from "@/components/kpi/ThresholdKpiGrid";
+import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,57 +14,50 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { groupHourly, groupMonthly, groupYearly } from "@/lib/temperature";
-import { localInputToISO, monthShortNames, toLocalInput } from "@/lib/date";
-import { getYeras } from "@/lib/temperature";
-import type { BasicQueryParams } from "@/types/api/request/statistic/BasicQueryParams";
-import type { TemperatureStatisticQueryParams } from "@/types/api/request/statistic/TemperatureStatisticQueryParams";
-import type { TemperaturedKpiValues, ThresholdKpiValues } from "@/types/components/kpi/ThresholdKpiValues";
+import { groupHourly, groupMonthly } from "@/lib/count";
+import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
+import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { TemperatureKpiGrid } from "@/components/kpi/TemperatureKpiGrid";
 
-const TEMP_COLORS = {
-  maxAvg: "#ef4444", // red   — mean T_max
-  mean:   "#22c55e", // green — mean T
-  minAvg: "#60a5fa", // blue  — mean T_min
-} as const;
-
-export default function Temperature() {
+export default function Wind() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState("2019");
-  const [to, setTo] = useState("2023");
-  
+  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
+  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
+  const [thresholdKt, setThresholdKt] = useState<number>(10);
+
   const [loading, setLoading] = useState(false);
 
-  const queryParams: TemperatureStatisticQueryParams = useMemo(
+  const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
       icao,
-      startYear: from,
-      endYear: to,
+      startISO: utcInputToISO(from),
+      endISO: utcInputToISO(to),
     }),
     [icao, from, to]
   );
 
   const { data, isFetching, error, refetch } = useQuery({
-    queryKey: ["temperature-stats", queryParams],
+    queryKey: ["wind-threshold-stats", basicQueryParams],
     queryFn: async () =>
-      MetarStatisticApi.fetchTemperatureStatistic({
+      MetarStatisticApi.fetchThresholdStatistic({
         icao,
-        startYear: from,
-        endYear: to,
+        field: "windpeak",
+        comparison: "GTE",
+        threshold: thresholdKt,
+        unit: "KT",
+        startISO: basicQueryParams.startISO,
+        endISO: basicQueryParams.endISO,
       }),
     enabled: false,
     placeholderData: keepPreviousData,
@@ -79,48 +72,36 @@ export default function Temperature() {
     }
   }
 
-  // const kpis: ThresholdKpiValues = useMemo(
-  //   () => ({
-  //     sampleSize: data?.totalCount ?? 0,
-  //     totalDaysCount: monthAgg.totalDaysCount ?? 0,
-  //     mostFrequentMonth: monthAgg.mostFrequentMonth ?? "JAN",
-  //     mostFrequentHour:
-  //       hourAgg.mostFrequentHour(monthAgg.mostFrequentMonth) ?? "00",
-  //   }),
-  //   [data, monthAgg, hourAgg]
-  // );
-  const yearAgg = groupYearly(data);
   const monthAgg = groupMonthly(data);
   const hourAgg = groupHourly(data);
+
+  const kpis: ThresholdKpiValues = useMemo(
+    () => ({
+      coverageFrom: data?.coverageFrom ?? "",
+      coverageTo: data?.coverageTo ?? "",
+      sampleSize: data?.totalCount ?? 0,
+      totalDaysCount: monthAgg.totalDaysCount ?? 0,
+      mostFrequentMonth: monthAgg.mostFrequentMonth ?? "JAN",
+      mostFrequentHour:
+        hourAgg.mostFrequentHour(monthAgg.mostFrequentMonth) ?? "00",
+    }),
+    [data, monthAgg, hourAgg]
+  );
 
   const [yearSel, setYearSel] = useState<"total" | number>("total");
   const [monthSel, setMonthSel] = useState<number>(1);
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
 
-  const monthSeries = yearSel === "total"
+  const monthSeries =
+    yearSel === "total"
       ? monthAgg.totalSeries
       : monthAgg.seriesOf(yearSel as number);
 
-  const monthTable = yearSel === "total"
-      ? monthAgg.totalTable
-      : monthAgg.tableOf(yearSel as number);
-
-  const hourSeries = yearSel === "total"
-      ? hourAgg.totalSeriesOf(monthSel)
-      : hourAgg.seriesOf(Number(yearSel), monthSel);
-
-  const hourTable = yearSel === "total"
-      ? hourAgg.totalTableOf(monthSel)
-      : hourAgg.tableOf(Number(yearSel), monthSel);
-
-  const kpis: TemperaturedKpiValues = {
-    years: yearAgg.years,
-    sampleSize: data?.totalCount ?? 0,
-    annualMean: yearAgg.annualMean,
-    annualMax: yearAgg.annualMax,
-    annualMin: yearAgg.annualMin,
-  };
+  const hourSeries =
+    yearSel === "total"
+      ? hourAgg.totalOf(monthSel)
+      : hourAgg.byYearMonth(Number(yearSel), monthSel);
 
   return (
     <>
@@ -134,7 +115,22 @@ export default function Temperature() {
         loading={loading}
         isFetching={isFetching}
         onFetch={handleFetch}
-        inputType="number"
+        rightSlot={
+          <div className="flex items-end gap-3 mr-3">
+            <div className="flex">
+              <div className="flex items-center text-sm px-2">Wind ≥</div>
+              <input
+                type="number"
+                min={0}
+                className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
+                value={thresholdKt}
+                onChange={(e) =>
+                  setThresholdKt(Math.max(0, Number(e.target.value)))
+                }
+              />
+           </div>
+          </div>
+        }
       />
 
       {/* Content */}
@@ -143,8 +139,8 @@ export default function Temperature() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>Analytics</span>
             <span>/</span>
-            <span className="text-foreground">Temperature</span>
-            <Hint text="[℃]"/>
+            <span className="text-foreground">Wind</span>
+            <Hint text="[kt] include gust"/>
           </div>
           {data && data.totalCount > 0
             ? <Badge variant="secondary">Summary</Badge>
@@ -154,7 +150,7 @@ export default function Temperature() {
           }
         </div>
 
-        <TemperatureKpiGrid kpis={kpis} />
+        <ThresholdKpiCardGrid kpis={kpis} />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
@@ -203,64 +199,49 @@ export default function Temperature() {
             className={`w-full min-w-0 ${mtView === "graph" ? "h-80" : ""}`}
           >
             {mtView === "graph" ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthSeries} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="monthShortName" />
-                  <YAxis unit="°C" allowDecimals />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="dailyMaxAvg" name="mean T_max" 
-                    stroke={TEMP_COLORS.maxAvg}
-                    strokeWidth={2}
-                    dot={{ r: 3, stroke: TEMP_COLORS.maxAvg, fill: "#fff", strokeWidth: 2 }}
-                    activeDot={{ r: 4, stroke: TEMP_COLORS.maxAvg, fill: TEMP_COLORS.maxAvg }} />
-                  <Line type="monotone" dataKey="dailyMeanAvg" name="mean T" 
-                    stroke={TEMP_COLORS.mean}
-                    strokeWidth={2}
-                    dot={{ r: 3, stroke: TEMP_COLORS.mean, fill: "#fff", strokeWidth: 2 }}
-                    activeDot={{ r: 4, stroke: TEMP_COLORS.mean, fill: TEMP_COLORS.mean }}
-                  />
-                  <Line type="monotone" dataKey="dailyMinAvg" name="mean T_min" 
-                    stroke={TEMP_COLORS.minAvg}
-                    strokeWidth={2}
-                    dot={{ r: 3, stroke: TEMP_COLORS.minAvg, fill: "#fff", strokeWidth: 2 }}
-                    activeDot={{ r: 4, stroke: TEMP_COLORS.minAvg, fill: TEMP_COLORS.minAvg }} />
-                </LineChart>
-              </ResponsiveContainer>
+              <ChartAutoSizer>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={monthSeries}
+                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="monthShortName" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartAutoSizer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <colgroup>
-                    <col className="w-1/6" />
-                    <col className="w-1/6" />
-                    <col className="w-1/6" />
-                    <col className="w-1/6" />
-                    <col className="w-1/6" />
-                    <col className="w-1/6" />
+                    <col className="w-1/2" />
+                    <col className="w-1/2" />
                   </colgroup>
-
                   <thead className="text-left text-muted-foreground border-b">
                     <tr>
                       <th className="py-2 pr-4">Month</th>
-                      <th className="py-2 pr-4">T</th>
-                      <th className="py-2 pr-4">T̄_max</th>
-                      <th className="py-2 pr-4">T̄_min</th>
-                      <th className="py-2 pr-4">T_max</th>
-                      <th className="py-2 pr-4">T_min</th>
+                      <th className="py-2 pr-4">Count</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {monthTable.map((r) => (
-                      <tr key={r.month} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
-                        <td className="py-2 pl-2 pr-4">{r.monthShotrName}</td>
-                        <td className="py-2 pl-2 pr-4">{r.mean}</td>
-                        <td className="py-2 pl-2 pr-4">{r.meanMax}</td>
-                        <td className="py-2 pl-2 pr-4">{r.meanMin}</td>
-                        <td className="py-2 pl-2 pr-4">{r.monthlyMax}</td>
-                        <td className="py-2 pl-2 pr-4">{r.monthlyMin}</td>
+                    {monthSeries.map((r) => (
+                      <tr
+                        key={r.monthShortName}
+                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                      >
+                        <td className="py-2 pl-2 pr-4">{r.monthShortName}</td>
+                        <td className="py-2 pl-2 pr-4">{r.count}</td>
                       </tr>
                     ))}
+                    <tr className="font-medium">
+                      <td className="py-2 pl-2 pr-4">TOTAL</td>
+                      <td className="py-2 pl-2 pr-4">
+                        {monthSeries.reduce((a, b) => a + b.count, 0)}
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -330,40 +311,38 @@ export default function Temperature() {
             className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
           >
             {hrView === "graph" ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={hourSeries} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="hour" />
-                  <YAxis unit="°C" allowDecimals />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="mean" name="mean T" dot />
-                </LineChart>
-              </ResponsiveContainer>
+              <ChartAutoSizer>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={hourSeries}
+                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hour" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar dataKey="count" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartAutoSizer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <colgroup>
-                    <col className="w-1/4" />
-                    <col className="w-1/4" />
-                    <col className="w-1/4" />
-                    <col className="w-1/4" />
+                    <col className="w-1/2" />
+                    <col className="w-1/2" />
                   </colgroup>
                   <thead className="text-left text-muted-foreground border-b">
                     <tr>
                       <th className="py-2 pl-2 pr-4">Hour</th>
-                      <th className="py-2 pl-2 pr-4">T</th>
-                      <th className="py-2 pl-2 pr-4">T_max</th>
-                      <th className="py-2 pl-2 pr-4">T_min</th>
+                      <th className="py-2 pl-2 pr-4">Count</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {hourTable.map((r) => (
+                    {hourSeries.map((r) => (
                       <tr key={r.hour} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
                         <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
-                        <td className="py-2 pl-2 pr-4">{r.mean}</td>
-                        <td className="py-2 pl-2 pr-4">{r.max}</td>
-                        <td className="py-2 pl-2 pr-4">{r.min}</td>
+                        <td className="py-2 pl-2 pr-4">{r.count}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -372,7 +351,7 @@ export default function Temperature() {
             )}
           </CardContent>
         </Card>
-  
+
         <Separator />
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
