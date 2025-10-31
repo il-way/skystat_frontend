@@ -1,16 +1,14 @@
 import {
   BarChart3,
-  Cloud,
+  Copyright,
   Database,
   Eye,
   Feather,
   Gauge,
   GaugeCircle,
   Mail,
-  Rainbow,
   Sun,
   ThermometerSnowflake,
-  Webhook,
   Wind,
 } from "lucide-react";
 import {
@@ -57,8 +55,11 @@ export default function SidebarNav() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
-          <Database className="h-4 w-4" /> Created by: il-way<br/>(ilway5186@google.com)
+        <div className="px-3 text-xs text-muted-foreground flex items-center gap-2">
+          <Copyright className="h-3 w-3" /> Created by il-way
+        </div>
+        <div className="px-3 pb-2 text-xs text-muted-foreground flex items-center gap-2">
+          <Mail className="h-3 w-3" /> ilway5186@google.com
         </div>
       </SidebarFooter>
     </Sidebar>

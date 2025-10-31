@@ -124,7 +124,7 @@ export default function Windrose() {
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
             <CardTitle className="text-base">
-              Windrose (gust not included) [%]
+              Windrose (gusts not included) [%]
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select

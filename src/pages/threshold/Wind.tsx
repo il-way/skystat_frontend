@@ -159,7 +159,7 @@ export default function Wind() {
             <span>Analytics</span>
             <span>/</span>
             <span className="text-foreground">Wind</span>
-            <Hint text="[kt] include gust" />
+            <Hint text="[kt] gusts included" />
           </div>
           {data && data.totalCount > 0 ? (
             <Badge variant="secondary">Summary</Badge>
@@ -176,7 +176,7 @@ export default function Wind() {
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
             <CardTitle className="text-base">
-              Number of observed days (monthly)
+              Monthly Observed Days
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select
@@ -273,7 +273,7 @@ export default function Wind() {
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
             <CardTitle className="text-base">
-              Number of observed days (hourly)
+              Hourly Observed Days
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select
@@ -340,7 +340,7 @@ export default function Wind() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="hour" />
                     <YAxis allowDecimals={false} />
-                    <Tooltip />
+                    <Tooltip labelFormatter={(label) => `${String(label).padStart(2, "0")}Z (UTC)`}/>
                     <Bar dataKey="count" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -382,17 +382,36 @@ export default function Wind() {
           okText="OK"
           blockOutsideClose
         />
-        
+
         <Separator />
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
           <div className="font-medium text-foreground mb-1">
-            Next steps (실전 적용 가이드)
+            Quick Guide — Wind
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐
-              최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
+              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
+              inclusive, To exclusive). Set <strong>Wind ≤ N kt (gusts included)</strong>.
+              Click <strong>Fetch</strong>.
+            </li>
+            <li>
+              Top cards summarize <strong>Sample Size</strong>,{" "}
+              <strong>Total Observed Days</strong>, and{" "}
+              <strong>most-frequent month/hour</strong>.
+            </li>
+            <li>
+              <strong>Monthly</strong> shows days per month meeting the
+              threshold. <strong>Hourly</strong> shows counts by{" "}
+              <strong>UTC</strong> hour for the selected year/month.
+            </li>
+            <li>
+              Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
+              <strong>total/year</strong> and <strong>month</strong> selectors.
+            </li>
+            <li>
+              Tip: Adjust the threshold to compare scenarios; all numbers
+              reflect your selected range & threshold.
             </li>
           </ul>
         </div>

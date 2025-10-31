@@ -14,10 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { localInputToISO, monthShortNames, toLocalInput } from "@/lib/date";
-import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
+import { monthShortNames } from "@/lib/date";
 import type { TemperatureStatisticQueryParams } from "@/api/types/request/statistic/TemperatureStatisticQueryParams";
-import type { TemperaturedKpiValues, ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
+import type { TemperaturedKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
@@ -35,7 +34,7 @@ import { groupHourly, groupMonthly, groupYearly } from "./TemperatureHelper";
 
 const TEMP_COLORS = {
   maxAvg: "#ef4444", // red   — mean T_max
-  mean:   "#22c55e", // green — mean T
+  mean: "#22c55e", // green — mean T
   minAvg: "#60a5fa", // blue  — mean T_min
 } as const;
 
@@ -43,7 +42,7 @@ export default function Temperature() {
   const [icao, setIcao] = useState("KJFK");
   const [from, setFrom] = useState("2019");
   const [to, setTo] = useState("2023");
-  
+
   const [loading, setLoading] = useState(false);
 
   const queryParams: TemperatureStatisticQueryParams = useMemo(
@@ -85,19 +84,23 @@ export default function Temperature() {
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
 
-  const monthSeries = yearSel === "total"
+  const monthSeries =
+    yearSel === "total"
       ? monthAgg.totalSeries
       : monthAgg.seriesOf(yearSel as number);
 
-  const monthTable = yearSel === "total"
+  const monthTable =
+    yearSel === "total"
       ? monthAgg.totalTable
       : monthAgg.tableOf(yearSel as number);
 
-  const hourSeries = yearSel === "total"
+  const hourSeries =
+    yearSel === "total"
       ? hourAgg.totalSeriesOf(monthSel)
       : hourAgg.seriesOf(Number(yearSel), monthSel);
 
-  const hourTable = yearSel === "total"
+  const hourTable =
+    yearSel === "total"
       ? hourAgg.totalTableOf(monthSel)
       : hourAgg.tableOf(Number(yearSel), monthSel);
 
@@ -131,14 +134,15 @@ export default function Temperature() {
             <span>Analytics</span>
             <span>/</span>
             <span className="text-foreground">Temperature</span>
-            <Hint text="[℃]"/>
+            <Hint text="[℃]" />
           </div>
-          {data && data.totalCount > 0
-            ? <Badge variant="secondary">Summary</Badge>
-            : error === null 
-              ? <Badge variant="destructive">No Data</Badge>
-              : <Badge variant="destructive">Error</Badge>
-          }
+          {data && data.totalCount > 0 ? (
+            <Badge variant="secondary">Summary</Badge>
+          ) : error === null ? (
+            <Badge variant="destructive">No Data</Badge>
+          ) : (
+            <Badge variant="destructive">Error</Badge>
+          )}
         </div>
 
         <TemperatureKpiGrid kpis={kpis} />
@@ -147,7 +151,7 @@ export default function Temperature() {
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
             <CardTitle className="text-base">
-              Number of observed days (monthly)
+              Monthly Observed Days
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select
@@ -191,28 +195,69 @@ export default function Temperature() {
           >
             {mtView === "graph" ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthSeries} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                <LineChart
+                  data={monthSeries}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="monthShortName" />
                   <YAxis unit="°C" allowDecimals />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="dailyMaxAvg" name="mean T_max" 
+                  <Line
+                    type="monotone"
+                    dataKey="dailyMaxAvg"
+                    name="mean T_max"
                     stroke={TEMP_COLORS.maxAvg}
                     strokeWidth={2}
-                    dot={{ r: 3, stroke: TEMP_COLORS.maxAvg, fill: "#fff", strokeWidth: 2 }}
-                    activeDot={{ r: 4, stroke: TEMP_COLORS.maxAvg, fill: TEMP_COLORS.maxAvg }} />
-                  <Line type="monotone" dataKey="dailyMeanAvg" name="mean T" 
+                    dot={{
+                      r: 3,
+                      stroke: TEMP_COLORS.maxAvg,
+                      fill: "#fff",
+                      strokeWidth: 2,
+                    }}
+                    activeDot={{
+                      r: 4,
+                      stroke: TEMP_COLORS.maxAvg,
+                      fill: TEMP_COLORS.maxAvg,
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="dailyMeanAvg"
+                    name="mean T"
                     stroke={TEMP_COLORS.mean}
                     strokeWidth={2}
-                    dot={{ r: 3, stroke: TEMP_COLORS.mean, fill: "#fff", strokeWidth: 2 }}
-                    activeDot={{ r: 4, stroke: TEMP_COLORS.mean, fill: TEMP_COLORS.mean }}
+                    dot={{
+                      r: 3,
+                      stroke: TEMP_COLORS.mean,
+                      fill: "#fff",
+                      strokeWidth: 2,
+                    }}
+                    activeDot={{
+                      r: 4,
+                      stroke: TEMP_COLORS.mean,
+                      fill: TEMP_COLORS.mean,
+                    }}
                   />
-                  <Line type="monotone" dataKey="dailyMinAvg" name="mean T_min" 
+                  <Line
+                    type="monotone"
+                    dataKey="dailyMinAvg"
+                    name="mean T_min"
                     stroke={TEMP_COLORS.minAvg}
                     strokeWidth={2}
-                    dot={{ r: 3, stroke: TEMP_COLORS.minAvg, fill: "#fff", strokeWidth: 2 }}
-                    activeDot={{ r: 4, stroke: TEMP_COLORS.minAvg, fill: TEMP_COLORS.minAvg }} />
+                    dot={{
+                      r: 3,
+                      stroke: TEMP_COLORS.minAvg,
+                      fill: "#fff",
+                      strokeWidth: 2,
+                    }}
+                    activeDot={{
+                      r: 4,
+                      stroke: TEMP_COLORS.minAvg,
+                      fill: TEMP_COLORS.minAvg,
+                    }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -230,16 +275,19 @@ export default function Temperature() {
                   <thead className="text-left text-muted-foreground border-b">
                     <tr>
                       <th className="py-2 pr-4">Month</th>
-                      <th className="py-2 pr-4">T</th>
-                      <th className="py-2 pr-4">T̄_max</th>
-                      <th className="py-2 pr-4">T̄_min</th>
+                      <th className="py-2 pr-4 overline">T</th>
+                      <th className="py-2 pr-4 overline">T_max</th>
+                      <th className="py-2 pr-4 overline">T_min</th>
                       <th className="py-2 pr-4">T_max</th>
                       <th className="py-2 pr-4">T_min</th>
                     </tr>
                   </thead>
                   <tbody>
                     {monthTable.map((r) => (
-                      <tr key={r.month} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
+                      <tr
+                        key={r.month}
+                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                      >
                         <td className="py-2 pl-2 pr-4">{r.monthShotrName}</td>
                         <td className="py-2 pl-2 pr-4">{r.mean}</td>
                         <td className="py-2 pl-2 pr-4">{r.meanMax}</td>
@@ -259,7 +307,7 @@ export default function Temperature() {
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
             <CardTitle className="text-base">
-              Number of observed days (hourly)
+              Hourly Observed Days
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select
@@ -318,11 +366,14 @@ export default function Temperature() {
           >
             {hrView === "graph" ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={hourSeries} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+                <LineChart
+                  data={hourSeries}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" />
                   <YAxis unit="°C" allowDecimals />
-                  <Tooltip />
+                  <Tooltip labelFormatter={(label) => `${String(label).padStart(2, "0")}Z (UTC)`}/>
                   <Legend />
                   <Line type="monotone" dataKey="mean" name="mean T" dot />
                 </LineChart>
@@ -339,14 +390,17 @@ export default function Temperature() {
                   <thead className="text-left text-muted-foreground border-b">
                     <tr>
                       <th className="py-2 pl-2 pr-4">Hour</th>
-                      <th className="py-2 pl-2 pr-4">T</th>
+                      <th className="py-2 pl-2 pr-4 overline">T</th>
                       <th className="py-2 pl-2 pr-4">T_max</th>
                       <th className="py-2 pl-2 pr-4">T_min</th>
                     </tr>
                   </thead>
                   <tbody>
                     {hourTable.map((r) => (
-                      <tr key={r.hour} className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors">
+                      <tr
+                        key={r.hour}
+                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                      >
                         <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
                         <td className="py-2 pl-2 pr-4">{r.mean}</td>
                         <td className="py-2 pl-2 pr-4">{r.max}</td>
@@ -359,16 +413,41 @@ export default function Temperature() {
             )}
           </CardContent>
         </Card>
-  
+
         <Separator />
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
           <div className="font-medium text-foreground mb-1">
-            Next steps (실전 적용 가이드)
+            Quick Guide — Temperature
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐 최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
+              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
+              inclusive, To exclusive). Click <strong>Fetch</strong>.
+            </li>
+            <li>
+              Top cards show <strong>Sample Size</strong>,{" "}
+              <strong>Annual Mean (°C)</strong>, and observed{" "}
+              <strong>Max/Min (°C)</strong> within the selected range.
+            </li>
+            <li>
+              <strong>Monthly (graph)</strong>: lines for{" "}
+              <strong>mean T</strong>, <strong>mean T_max</strong>,{" "}
+              <strong>mean T_min</strong> by month (°C).{" "}
+            </li>
+            <li>
+              <strong>Hourly (graph)</strong>: <strong>mean T</strong> by{" "}
+              <strong>UTC</strong> hour for the selected year/month.
+            </li>
+            <li>
+              <strong>Table</strong>: yearly block lists{" "}
+              <strong>mean T / mean T_max / mean T_min</strong> per year and a{" "}
+              <strong>total</strong> row; monthly block lists the same per
+              month. <em>Overbars indicate “mean”.</em>
+            </li>
+            <li>
+              Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
+              <strong>total/year</strong> and <strong>month</strong> selectors.
             </li>
           </ul>
         </div>

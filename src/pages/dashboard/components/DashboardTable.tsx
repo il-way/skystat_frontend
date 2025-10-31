@@ -10,7 +10,7 @@ export default function DashboardTable({ icao, from, to, rows }: { icao: string,
   return (
     <Card className="rounded-2xl">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Monthly Count Results</CardTitle>
+        <CardTitle className="text-base">Monthly Observed Days</CardTitle>
         <CardDescription>For each calendar month, this table counts the number of days that satisfy the condition.</CardDescription>
       </CardHeader>
       <CardContent>

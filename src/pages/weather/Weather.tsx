@@ -198,9 +198,7 @@ export default function Weather() {
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Number of observed days (monthly)
-            </CardTitle>
+            <CardTitle className="text-base">Monthly Observed Days</CardTitle>
             <div className="flex items-center gap-2">
               <Select
                 value={String(yearSel)}
@@ -295,9 +293,7 @@ export default function Weather() {
         {/* ==== (2) 시간별 관측횟수: 연/월 선택 그래프/테이블 + 합계 지원 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Number of observed days (hourly)
-            </CardTitle>
+            <CardTitle className="text-base">Hourly Observed Days</CardTitle>
             <div className="flex items-center gap-2">
               <Select
                 value={String(yearSel)}
@@ -363,7 +359,11 @@ export default function Weather() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="hour" />
                     <YAxis allowDecimals={false} />
-                    <Tooltip />
+                    <Tooltip
+                      labelFormatter={(label) =>
+                        `${String(label).padStart(2, "0")}Z (UTC)`
+                      }
+                    />
                     <Bar dataKey="count" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -410,17 +410,31 @@ export default function Weather() {
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
           <div className="font-medium text-foreground mb-1">
-            Next steps (실전 적용 가이드)
+            Quick Guide — Weather
           </div>
           <ul className="list-disc pl-5 space-y-1">
-            <li>현재 SN를 검색하면 FZSN, BLSN같은 descriptor+phenomena 방식</li>
             <li>
-              에선 SN를 잡아내지만 SNPL같인 phenomena+phenomena+...같은 경우엔
-              못잡아냄. 딱 해당 코드만 있는 걸 잡아내도록 설계돼있음
+              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
+              inclusive, To exclusive). Select <strong>Weather code</strong>{" "}
+              (e.g., SN, TS, FG). Click <strong>Fetch</strong>.
             </li>
             <li>
-              SNPL같은 경우 눈이 온걸로 집계하려면 서버측 HAVING절에 =
-              :phenomenonCount를 ＞ 0으로 바꿔버리면 됨
+              Top cards summarize <strong>Sample Size</strong>,{" "}
+              <strong>Total Observed Days</strong>, and{" "}
+              <strong>most-frequent month/hour</strong>.
+            </li>
+            <li>
+              <strong>Monthly</strong> shows days per month where the code
+              appears. <strong>Hourly</strong> shows counts by{" "}
+              <strong>UTC</strong> hour for the selected year/month.
+            </li>
+            <li>
+              Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
+              <strong>total/year</strong> and <strong>month</strong> selectors.
+            </li>
+            <li>
+              Tip: Change the code or date range to compare scenarios; all
+              numbers reflect your selected range & filters.
             </li>
           </ul>
         </div>

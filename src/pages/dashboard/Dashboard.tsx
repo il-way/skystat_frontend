@@ -20,6 +20,7 @@ import type { WindLineData } from "./types/WindLineData";
 import { round2 } from "@/lib/math";
 import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
+import { emptyDashboardTableRows } from "./DashboardHelper";
 
 export default function Dashboard() {
   const [icao, setIcao] = useState("KJFK");
@@ -185,7 +186,7 @@ export default function Dashboard() {
           icao={icao}
           from={from}
           to={to}
-          rows={tableRows || []}
+          rows={tableRows || emptyDashboardTableRows()}
         />
 
         <SimpleAlertModal
@@ -201,26 +202,32 @@ export default function Dashboard() {
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
           <div className="font-medium text-foreground mb-1">
-            Next steps (실전 적용 가이드)
+            Quick Guide — Dashboard
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              데이터 연동: TanStack Query로 <code>/metar/statistic/*</code> 조회
-              훅 구성, icao/from/to를 쿼리키에 반영.
+              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
+              inclusive, To exclusive). Click <strong>Fetch</strong>.
             </li>
             <li>
-              컴포넌트 분리: Sidebar / Topbar / Kpi / Charts / Table 폴더화 및
-              Storybook 권장.
+              Top cards show <strong>Sample Size</strong>,{" "}
+              <strong>Avg Visibility (m)</strong>,{" "}
+              <strong>Avg Ceiling (ft)</strong>, and{" "}
+              <strong>Avg WindSpeed (kt)</strong> for the selected range.
             </li>
             <li>
-              테마: 브랜드 기본색(#1D97DB)을 Tailwind theme primary에 바인딩.
+              <strong>Mean Wind Speed Over Time</strong>: monthly line chart of
+              mean wind speed across the period.
             </li>
             <li>
-              접근성: 키보드 포커스, 대비(AAA 근접), 로딩 라이브리전 확인.
+              <strong>Monthly Observed Days</strong> table: counts per month
+              that meet each preset condition (see column headers such as{" "}
+              <em>WindPeak</em>, <em>Visibility</em>, <em>Ceiling</em>,{" "}
+              <em>Thunderstorm</em>, <em>Snow</em>).
             </li>
             <li>
-              페이지: Dashboard / METAR Search / Statistics / Crosswind /
-              Stations / Settings.
+              Tip: Change the date range to compare seasons/years; all numbers
+              reflect your selected range.
             </li>
           </ul>
         </div>
