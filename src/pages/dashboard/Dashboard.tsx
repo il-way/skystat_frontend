@@ -21,6 +21,7 @@ import { round2 } from "@/lib/math";
 import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import { emptyDashboardTableRows } from "./DashboardHelper";
+import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 
 export default function Dashboard() {
   const [icao, setIcao] = useState("KJFK");
@@ -135,6 +136,12 @@ export default function Dashboard() {
   const isAnyFetching =
     loading || avgIsFetching || tableIsFetching || avgWindIsFetching;
 
+  const status = avg && avg.totalCount > 0 
+    ? "summary"
+    : avgError === null && tableError === null && avgWindError === null
+      ? "no-data"
+      : "error";
+
   return (
     <>
       {/* Topbar / Filters */}
@@ -153,23 +160,8 @@ export default function Dashboard() {
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Breadcrumb / Context */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Analytics</span>
-            <span>/</span>
-            <span className="text-foreground">Dashboard</span>
-          </div>
-          {avg && avg.totalCount > 0 ? (
-            <Badge variant="secondary">Summary</Badge>
-          ) : avgError === null &&
-            tableError === null &&
-            avgWindError === null ? (
-            <Badge variant="destructive">No Data</Badge>
-          ) : (
-            <Badge variant="destructive">Error</Badge>
-          )}
-        </div>
-
+        <PageTrailstatusBar page="Dashboard" status={status} />
+        
         {/* KPIs */}
         <DashboardKpiCardGrid kpis={kpis} />
 

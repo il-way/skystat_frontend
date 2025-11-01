@@ -1,9 +1,6 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
-import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
-import Hint from "@/components/common/Hint";
 import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -35,6 +32,8 @@ import {
 import { isWeatherDescriptor, isWeatherPhenomenon } from "./WeatherHelper";
 import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
+import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
+import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 
 export default function Weather() {
   const [icao, setIcao] = useState("KJFK");
@@ -124,6 +123,10 @@ export default function Weather() {
   const [monthSel, setMonthSel] = useState<number>(1);
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
+  
+  const status: PageTrailStatus = data && data.totalCount > 0
+      ? "summary"
+      : error === null ? "no-data" : "error";
 
   const monthSeries =
     yearSel === "total"
@@ -177,21 +180,7 @@ export default function Weather() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Analytics</span>
-            <span>/</span>
-            <span className="text-foreground">Weather</span>
-            <Hint text="[hPa]" />
-          </div>
-          {data && data.totalCount > 0 ? (
-            <Badge variant="secondary">Summary</Badge>
-          ) : error === null ? (
-            <Badge variant="destructive">No Data</Badge>
-          ) : (
-            <Badge variant="destructive">Error</Badge>
-          )}
-        </div>
+        <PageTrailstatusBar page="Weather" status={status} />
 
         <ThresholdKpiCardGrid kpis={kpis} />
 
@@ -240,20 +229,18 @@ export default function Weather() {
             className={`w-full min-w-0 ${mtView === "graph" ? "h-80" : ""}`}
           >
             {mtView === "graph" ? (
-              <ChartAutoSizer>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="monthShortName" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartAutoSizer>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthSeries}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="monthShortName" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -350,24 +337,22 @@ export default function Weather() {
             className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
           >
             {hrView === "graph" ? (
-              <ChartAutoSizer>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={hourSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip
-                      labelFormatter={(label) =>
-                        `${String(label).padStart(2, "0")}Z (UTC)`
-                      }
-                    />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartAutoSizer>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={hourSeries}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="hour" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip
+                    labelFormatter={(label) =>
+                      `${String(label).padStart(2, "0")}Z (UTC)`
+                    }
+                  />
+                  <Bar dataKey="count" />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

@@ -15,6 +15,20 @@ export function toUTCInput(dt: number | string | Date): string {
   }
 }
 
+export function toUTCInputFrom(year: number | string): string {
+  try {
+    const d = new Date(Number(year), 0, 1, 0, 0);
+    const yyyy = d.getFullYear();
+    const mm = "01";
+    const dd = "01";
+    const hh = "00";
+    const mi = "00";
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  } catch {
+    return "";
+  }
+}
+
 export function utcInputToISO(local: string): string {
   try {
     const [datePart, timePart] = local.split("T");

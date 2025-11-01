@@ -1,5 +1,4 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
-import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
 import Hint from "@/components/common/Hint";
 import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
@@ -31,6 +30,8 @@ import {
 } from "recharts";
 import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
+import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
+import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 
 export default function Wind() {
   const [icao, setIcao] = useState("KJFK");
@@ -107,6 +108,10 @@ export default function Wind() {
     [data, monthAgg, hourAgg, isFetched]
   );
 
+  const status: PageTrailStatus = data && data.totalCount > 0 
+    ? "summary" 
+    : error === null ? "no-data" : "error";
+
   const [yearSel, setYearSel] = useState<"total" | number>("total");
   const [monthSel, setMonthSel] = useState<number>(1);
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
@@ -154,21 +159,7 @@ export default function Wind() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Analytics</span>
-            <span>/</span>
-            <span className="text-foreground">Wind</span>
-            <Hint text="[kt] gusts included" />
-          </div>
-          {data && data.totalCount > 0 ? (
-            <Badge variant="secondary">Summary</Badge>
-          ) : error === null ? (
-            <Badge variant="destructive">No Data</Badge>
-          ) : (
-            <Badge variant="destructive">Error</Badge>
-          )}
-        </div>
+        <PageTrailstatusBar page="Wind" status={status} hint="[kt]" />
 
         <ThresholdKpiCardGrid kpis={kpis} />
 
@@ -219,7 +210,6 @@ export default function Wind() {
             className={`w-full min-w-0 ${mtView === "graph" ? "h-80" : ""}`}
           >
             {mtView === "graph" ? (
-              <ChartAutoSizer>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={monthSeries}
@@ -232,7 +222,6 @@ export default function Wind() {
                     <Bar dataKey="count" />
                   </BarChart>
                 </ResponsiveContainer>
-              </ChartAutoSizer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -331,7 +320,6 @@ export default function Wind() {
             className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
           >
             {hrView === "graph" ? (
-              <ChartAutoSizer>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={hourSeries}
@@ -344,7 +332,6 @@ export default function Wind() {
                     <Bar dataKey="count" />
                   </BarChart>
                 </ResponsiveContainer>
-              </ChartAutoSizer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

@@ -1,7 +1,6 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
 import Hint from "@/components/common/Hint";
 import Topbar from "@/components/topbar/Topbar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
+import { monthShortNames, toUTCInputFrom, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -21,11 +20,15 @@ import ReactECharts from "echarts-for-react";
 import { buildEchartOptions, buildWindroseDataset } from "./WindroseHelper";
 import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
+import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
+import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
+import type { WindroseKpiValues } from "./type/WindroseKpiValues";
+import { WindroseKpiGrid } from "./WindroseKpiGrid";
 
 export default function Windrose() {
   const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
-  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
+  const [from, setFrom] = useState("2019");
+  const [to, setTo] = useState("2023");
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
 
@@ -34,13 +37,13 @@ export default function Windrose() {
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
       icao,
-      startISO: utcInputToISO(from),
-      endISO: utcInputToISO(to),
+      startISO: utcInputToISO(toUTCInputFrom(from)),
+      endISO: utcInputToISO(toUTCInputFrom(to)),
     }),
     [icao, from, to]
   );
 
-  const { data, isFetching, error, refetch } = useQuery({
+  const { data, isFetching, isFetched, error, refetch } = useQuery({
     queryKey: ["windrose-stats", basicQueryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchWindRoseStatistic({
@@ -82,10 +85,27 @@ export default function Windrose() {
     [dataset, monthSel]
   );
 
+  const status: PageTrailStatus = data && data.totalCount > 0
+    ? "summary"
+    : error === null ? "no-data" : "error";
+
   const hasData =
     dataset.directionBins.length > 0 &&
     dataset.speedBins.length > 0 &&
     dataset.series[monthShortNames[monthSel - 1]]?.length > 0;
+
+  console.log(data);
+  const kpis: WindroseKpiValues = {
+    coverageFrom: data?.coverageFrom ?? "",
+    coverageTo: data?.coverageTo ?? "",
+    totalCount: data?.totalCount ?? 0,
+    sampleSize: data?.sampleSize ?? 0,
+    variableSize: data?.variableSize ?? 0,
+    speedBins: dataset.speedBins ?? [],
+    directionBins: dataset.directionBins ?? [],
+    isFetched,
+    hasData: data ? data.sampleSize > 0 : false,
+  };
 
   return (
     <>
@@ -99,32 +119,19 @@ export default function Windrose() {
         loading={loading}
         isFetching={isFetching}
         onFetch={handleFetch}
+        inputType="number"
       />
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Analytics</span>
-            <span>/</span>
-            <span className="text-foreground">Windrose</span>
-            <Hint text="[kt]" />
-          </div>
-          {data && data.totalCount > 0 ? (
-            <Badge variant="secondary">Summary</Badge>
-          ) : error === null ? (
-            <Badge variant="destructive">No Data</Badge>
-          ) : (
-            <Badge variant="destructive">Error</Badge>
-          )}
-        </div>
+        <PageTrailstatusBar page="Windrose" status={status} hint="[%] gusts not included" />
 
-        {/* <ThresholdKpiCardGrid kpis={kpis} /> */}
+        <WindroseKpiGrid kpis={kpis} />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
             <CardTitle className="text-base">
-              Windrose (gusts not included) [%]
+              Monthly Observed
             </CardTitle>
             <div className="flex items-center gap-2">
               <Select
@@ -244,12 +251,26 @@ export default function Windrose() {
         {/* Next steps */}
         <div className="text-sm text-muted-foreground leading-6">
           <div className="font-medium text-foreground mb-1">
-            Next steps (실전 적용 가이드)
+            Quick Guide — Windrose
           </div>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              여기가 있어야 가로폭이 유지됨. 글자수 따라 보이는 가로폭이 달라짐
-              최소폭으로 했을 때 2줄로 보이도록 글을 좀 써야됨
+              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
+              inclusive, To exclusive). Click <strong>Fetch</strong>.
+            </li>
+            <li>
+              The <strong>polar chart</strong> stacks direction-wise <strong>frequency (%)</strong> by <strong>speed bins (kt)</strong>; the center shows <strong>Calm %</strong>. <em className="not-italic">(Gusts are not included)</em>
+            </li>
+            <li>
+              Uses <strong>{dataset.directionBins.length} cardinal directions</strong>.
+            </li>
+            <li>
+              Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
+              <strong>total/year</strong> and <strong>month</strong> selectors.
+            </li>
+            <li>
+              Tip: Change the code or date range to compare scenarios; all
+              numbers reflect your selected range & filters.
             </li>
           </ul>
         </div>

@@ -1,0 +1,1 @@
+export type PageTrailStatus = "summary" | "no-data" | "error";

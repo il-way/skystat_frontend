@@ -1,5 +1,5 @@
 import type { WindroseResponse } from "@/api/types/response/windrose/WindroseResponse";
-import type { WindroseDataset } from "./type/EchartDataset";
+import type { WindroseDataset } from "./type/WindroseDataTypes";
 import { monthShortNameFrom, monthShortNames } from "@/lib/date";
 import type { MonthShortName } from "@/types/dates/Dates";
 import { round2 } from "@/lib/math";

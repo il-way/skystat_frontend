@@ -1,7 +1,5 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
-import { ChartAutoSizer } from "@/components/chart/ChartAutoSizer";
 import Hint from "@/components/common/Hint";
-import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +14,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { monthShortNames } from "@/lib/date";
 import type { TemperatureStatisticQueryParams } from "@/api/types/request/statistic/TemperatureStatisticQueryParams";
-import type { TemperaturedKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
@@ -31,6 +28,8 @@ import {
 } from "recharts";
 import { TemperatureKpiGrid } from "@/pages/temperature/components/TemperatureKpiGrid";
 import { groupHourly, groupMonthly, groupYearly } from "./TemperatureHelper";
+import type { TemperaturedKpiValues } from "./types/TemperaturedKpiValues";
+import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 
 const TEMP_COLORS = {
   maxAvg: "#ef4444", // red   — mean T_max
@@ -54,7 +53,7 @@ export default function Temperature() {
     [icao, from, to]
   );
 
-  const { data, isFetching, error, refetch } = useQuery({
+  const { data, isFetching, isFetched, error, refetch } = useQuery({
     queryKey: ["temperature-stats", queryParams],
     queryFn: async () =>
       MetarStatisticApi.fetchTemperatureStatistic({
@@ -84,6 +83,10 @@ export default function Temperature() {
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
 
+  const status = data && data.totalCount > 0 
+    ? "summary" 
+    : error === null ? "no-data" : "error";
+
   const monthSeries =
     yearSel === "total"
       ? monthAgg.totalSeries
@@ -106,10 +109,14 @@ export default function Temperature() {
 
   const kpis: TemperaturedKpiValues = {
     years: yearAgg.years,
+    coverageFrom: data?.coverageFrom ?? "",
+    coverageTo: data?.coverageTo ?? "",
     sampleSize: data?.totalCount ?? 0,
-    annualMean: yearAgg.annualMean,
-    annualMax: yearAgg.annualMax,
-    annualMin: yearAgg.annualMin,
+    annualMean: yearAgg.annualMean ?? 0,
+    annualMax: yearAgg.annualMax ?? 0,
+    annualMin: yearAgg.annualMin ?? 0,
+    isFetched,
+    hasData: (data?.totalCount ?? 0) > 0,
   };
 
   return (
@@ -129,21 +136,7 @@ export default function Temperature() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Analytics</span>
-            <span>/</span>
-            <span className="text-foreground">Temperature</span>
-            <Hint text="[℃]" />
-          </div>
-          {data && data.totalCount > 0 ? (
-            <Badge variant="secondary">Summary</Badge>
-          ) : error === null ? (
-            <Badge variant="destructive">No Data</Badge>
-          ) : (
-            <Badge variant="destructive">Error</Badge>
-          )}
-        </div>
+        <PageTrailstatusBar page="Temperature" status={status} hint="[℃]"/>
 
         <TemperatureKpiGrid kpis={kpis} />
 
@@ -443,8 +436,9 @@ export default function Temperature() {
               <strong>Table</strong>: yearly block lists{" "}
               <strong>mean T / mean T_max / mean T_min</strong> per year and a{" "}
               <strong>total</strong> row; monthly block lists the same per
-              month. <em>Overbars indicate “mean”.</em>
+              month.
             </li>
+            <li className="list-none"><em>Overbars indicate “mean”.</em></li>
             <li>
               Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
               <strong>total/year</strong> and <strong>month</strong> selectors.

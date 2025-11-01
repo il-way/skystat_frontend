@@ -1,13 +1,11 @@
 import { round2 } from "@/lib/math";
 import KpiCard from "../../../components/kpi/KpiCard";
 import type { TemperaturedKpiValues } from "@/pages/temperature/types/TemperaturedKpiValues";
+import { dataCoverageHint } from "@/lib/page";
 
 export function TemperatureKpiGrid({ kpis }: { kpis: TemperaturedKpiValues }) {
-  const { years, sampleSize, annualMean, annualMax, annualMin } = kpis;
-  years.sort((a,b) => a-b);
-  const coverageHint = years.length > 0
-    ? `${years[0]} ~ ${years[years.length-1]}`
-    : "Not Searched"
+  const { coverageFrom, coverageTo, sampleSize, annualMean, annualMax, annualMin, isFetched, hasData } = kpis;
+  const coverageHint = dataCoverageHint(coverageFrom, coverageTo, isFetched, hasData);
     
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
