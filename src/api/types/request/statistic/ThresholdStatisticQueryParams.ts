@@ -6,7 +6,7 @@ export type ThresholdStatisticQueryParams = {
   icao: string;
   field: MetricField;
   comparison: Comparison;
-  threshold: number;
+  threshold: string;
   unit: Unit;
   startISO: string;
   endISO: string;

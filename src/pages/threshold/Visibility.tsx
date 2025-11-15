@@ -31,12 +31,11 @@ import {
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import { getErrorMessage } from "@/lib/page";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
+import { usePageScope } from "@/context/scope/usePageScope";
+import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
 
 export default function Visibility() {
-  const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
-  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
-  const [thresholdM, setThresholdM] = useState<number>(800);
+  const { icao, from, to, threshold, setIcao, setFrom, setTo, setThreshold: setThreshold } = usePageScope({ pageId: "visibility", defaults: { ...PAGE_DEFAULTS.visibility } });
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +56,7 @@ export default function Visibility() {
         icao,
         field: "visibility",
         comparison: "LTE",
-        threshold: thresholdM,
+        threshold,
         unit: "METERS",
         startISO: basicQueryParams.startISO,
         endISO: basicQueryParams.endISO,
@@ -145,9 +144,9 @@ export default function Visibility() {
                 type="number"
                 min={0}
                 className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
-                value={thresholdM}
+                value={threshold}
                 onChange={(e) =>
-                  setThresholdM(Math.max(0, Number(e.target.value)))
+                  setThreshold(Math.max(0, Number(e.target.value)).toString())
                 }
               />
             </div>

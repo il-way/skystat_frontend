@@ -34,18 +34,16 @@ import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
+import { usePageScope } from "@/context/scope/usePageScope";
+import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
 
 export default function Weather() {
-  const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
-  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
   const targetCodes = ["FZ", "SN", "PL", "FG", "TS", "RA", "WS"] as (
     | WeatherDescriptor
     | WeatherPhenomenon
   )[];
-  const [target, setTarget] = useState<WeatherDescriptor | WeatherPhenomenon>(
-    "SN"
-  );
+  const { icao, from, to, threshold: target, setIcao, setFrom, setTo, setThreshold: setTarget } = usePageScope({ pageId: "weather", defaults: { ...PAGE_DEFAULTS.weather } });
+
   const [condition, setCondition] = useState<WeatherCondition>("phenomena");
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");

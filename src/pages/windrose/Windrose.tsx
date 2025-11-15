@@ -24,11 +24,11 @@ import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus"
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import type { WindroseKpiValues } from "./type/WindroseKpiValues";
 import { WindroseKpiGrid } from "./WindroseKpiGrid";
+import { usePageScope } from "@/context/scope/usePageScope";
+import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
 
 export default function Windrose() {
-  const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState("2019");
-  const [to, setTo] = useState("2023");
+  const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "windrose", defaults: { ...PAGE_DEFAULTS.windrose } });
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
 

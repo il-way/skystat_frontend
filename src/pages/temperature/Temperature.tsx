@@ -1,7 +1,5 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
-import Hint from "@/components/common/Hint";
 import Topbar from "@/components/topbar/Topbar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,6 +28,8 @@ import { TemperatureKpiGrid } from "@/pages/temperature/components/TemperatureKp
 import { groupHourly, groupMonthly, groupYearly } from "./TemperatureHelper";
 import type { TemperaturedKpiValues } from "./types/TemperaturedKpiValues";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
+import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
+import { usePageScope } from "@/context/scope/usePageScope";
 
 const TEMP_COLORS = {
   maxAvg: "#ef4444", // red   — mean T_max
@@ -38,9 +38,7 @@ const TEMP_COLORS = {
 } as const;
 
 export default function Temperature() {
-  const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState("2019");
-  const [to, setTo] = useState("2023");
+  const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "temperature", defaults: { ...PAGE_DEFAULTS.temperature } });
 
   const [loading, setLoading] = useState(false);
 

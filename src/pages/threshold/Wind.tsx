@@ -32,12 +32,11 @@ import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
+import { usePageScope } from "@/context/scope/usePageScope";
+import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
 
 export default function Wind() {
-  const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
-  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
-  const [thresholdKt, setThresholdKt] = useState<number>(10);
+  const { icao, from, to, threshold, setIcao, setFrom, setTo, setThreshold: setThreshold } = usePageScope({ pageId: "wind", defaults: { ...PAGE_DEFAULTS.wind } });
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
 
@@ -59,7 +58,7 @@ export default function Wind() {
         icao,
         field: "windpeak",
         comparison: "GTE",
-        threshold: thresholdKt,
+        threshold,
         unit: "KT",
         startISO: basicQueryParams.startISO,
         endISO: basicQueryParams.endISO,
@@ -147,9 +146,9 @@ export default function Wind() {
                 type="number"
                 min={0}
                 className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
-                value={thresholdKt}
+                value={threshold}
                 onChange={(e) =>
-                  setThresholdKt(Math.max(0, Number(e.target.value)))
+                  setThreshold(Math.max(0, Number(e.target.value)).toString())
                 }
               />
             </div>

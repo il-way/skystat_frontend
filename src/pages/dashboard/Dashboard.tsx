@@ -22,11 +22,11 @@ import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import { emptyDashboardTableRows } from "./DashboardHelper";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
+import { usePageScope } from "@/context/scope/usePageScope";
+import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
 
 export default function Dashboard() {
-  const [icao, setIcao] = useState("KJFK");
-  const [from, setFrom] = useState(toUTCInput(Date.UTC(2019, 0, 1, 0, 0)));
-  const [to, setTo] = useState(toUTCInput(Date.UTC(2023, 0, 1, 0, 0)));
+  const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "dashboard", defaults: { ...PAGE_DEFAULTS.dashboard } });
   const [loading, setLoading] = useState(false);
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
