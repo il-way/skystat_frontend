@@ -1,10 +1,10 @@
 import type { TemperatureStatisticResponse } from "@/api/types/response/statistic/TemperatureStatisticResponse";
 import { monthShortNameFrom } from "../../lib/date";
 import type { MonthlyTemperatureStat } from "@/api/types/response/common/MonthlyTemperatureStat";
-import type { MonthlyTableRow } from "@/types/temperature/MonthlyTableRow";
-import type { HourlyTableRow } from "@/types/temperature/HourlyTableRow";
 import type { HourlyTemperatureStat } from "@/api/types/response/common/HourlyTemperatureStat";
 import { round2 } from "@/lib/math";
+import type { HourlyTableRow } from "./types/HourlyTableRow";
+import type { MonthlyTableRow } from "./types/MonthlyTableRow";
 
 const H24 = Array.from({ length: 24}, (_, i) => i);
 

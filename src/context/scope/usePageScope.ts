@@ -2,7 +2,7 @@ import { ssKey } from "@/lib/storageKeys";
 import type { ScopeState } from "./Scope";
 import { useEffect, useMemo, useReducer } from "react";
 import { scopeReducer } from "./scopeReducer";
-import { PAGE_ID_THRESHOLD, type PageId } from "./PageDefaults";
+import { PAGE_ID_THRESHOLD, type PageId } from "./pageDefaults";
 
 export function usePageScope(opts: { pageId: PageId; defaults: ScopeState }) {
   const { pageId, defaults } = opts;

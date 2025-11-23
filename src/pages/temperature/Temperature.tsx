@@ -28,7 +28,7 @@ import { TemperatureKpiGrid } from "@/pages/temperature/components/TemperatureKp
 import { groupHourly, groupMonthly, groupYearly } from "./TemperatureHelper";
 import type { TemperaturedKpiValues } from "./types/TemperaturedKpiValues";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
-import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
+import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 import { usePageScope } from "@/context/scope/usePageScope";
 
 const TEMP_COLORS = {
@@ -414,7 +414,7 @@ export default function Temperature() {
           <ul className="list-disc pl-5 space-y-1">
             <li>
               Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
-              inclusive, To exclusive). Click <strong>Fetch</strong>.
+              inclusive, To exclusive). Click <strong>Search</strong>.
             </li>
             <li>
               Top cards show <strong>Sample Size</strong>,{" "}

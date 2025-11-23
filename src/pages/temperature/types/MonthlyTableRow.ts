@@ -1,4 +1,4 @@
-import type { MonthShortName } from "../dates/Dates";
+import type { MonthShortName } from "@/types/dates/Dates";
 
 export type MonthlyTableRow = {
   month: number;

@@ -4,7 +4,7 @@ import Hint from "../../../components/common/Hint";
 import type { DashboardTableRow } from "@/pages/dashboard/types/DashboardTable";
 import { monthShortNameFrom } from "@/lib/date";
 
-export default function DashboardTable({ icao, from, to, rows }: { icao: string, from: string, to: string, rows: DashboardTableRow[] }): JSX.Element {
+export default function DashboardTable({ rows }: { rows: DashboardTableRow[] }): JSX.Element {
   const nf = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
   return (

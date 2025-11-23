@@ -25,7 +25,7 @@ import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import type { WindroseKpiValues } from "./type/WindroseKpiValues";
 import { WindroseKpiGrid } from "./WindroseKpiGrid";
 import { usePageScope } from "@/context/scope/usePageScope";
-import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
+import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 
 export default function Windrose() {
   const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "windrose", defaults: { ...PAGE_DEFAULTS.windrose } });
@@ -94,7 +94,6 @@ export default function Windrose() {
     dataset.speedBins.length > 0 &&
     dataset.series[monthShortNames[monthSel - 1]]?.length > 0;
 
-  console.log(data);
   const kpis: WindroseKpiValues = {
     coverageFrom: data?.coverageFrom ?? "",
     coverageTo: data?.coverageTo ?? "",
@@ -256,7 +255,7 @@ export default function Windrose() {
           <ul className="list-disc pl-5 space-y-1">
             <li>
               Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
-              inclusive, To exclusive). Click <strong>Fetch</strong>.
+              inclusive, To exclusive). Click <strong>Search</strong>.
             </li>
             <li>
               The <strong>polar chart</strong> stacks direction-wise <strong>frequency (%)</strong> by <strong>speed bins (kt)</strong>; the center shows <strong>Calm %</strong>. <em className="not-italic">(Gusts are not included)</em>

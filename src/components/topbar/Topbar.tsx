@@ -63,7 +63,7 @@ export default function Topbar(props: TopbarProps): JSX.Element {
                 disabled={loading || isFetching}
                 className={`rounded-2xl ${rightSlot ? "" : "w-full"} sm:w-20`}
               >
-                {loading || isFetching ? "Loading..." : "Fetch"}
+                {loading || isFetching ? "Loading..." : "Search"}
               </Button>
             </div>
           </div>

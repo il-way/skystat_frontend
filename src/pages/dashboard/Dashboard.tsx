@@ -3,12 +3,10 @@ import WindLineChart from "@/pages/dashboard/components/WindLineChart";
 import { DashboardKpiCardGrid } from "@/pages/dashboard/components/DashboardKpiGrid";
 import DashboardTable from "@/pages/dashboard/components/DashboardTable";
 import Topbar from "@/components/topbar/Topbar";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   monthShortNameFrom,
   monthShortNames,
-  toUTCInput,
   utcInputToISO,
 } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
@@ -23,7 +21,7 @@ import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import { emptyDashboardTableRows } from "./DashboardHelper";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { usePageScope } from "@/context/scope/usePageScope";
-import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
+import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 
 export default function Dashboard() {
   const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "dashboard", defaults: { ...PAGE_DEFAULTS.dashboard } });
@@ -174,12 +172,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Table */}
-        <DashboardTable
-          icao={icao}
-          from={from}
-          to={to}
-          rows={tableRows || emptyDashboardTableRows()}
-        />
+        <DashboardTable rows={tableRows || emptyDashboardTableRows()} />
 
         <SimpleAlertModal
           open={errOpen}
@@ -199,7 +192,7 @@ export default function Dashboard() {
           <ul className="list-disc pl-5 space-y-1">
             <li>
               Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
-              inclusive, To exclusive). Click <strong>Fetch</strong>.
+              inclusive, To exclusive). Click <strong>Search</strong>.
             </li>
             <li>
               Top cards show <strong>Sample Size</strong>,{" "}

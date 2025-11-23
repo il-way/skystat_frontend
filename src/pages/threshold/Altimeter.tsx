@@ -1,8 +1,6 @@
 import { MetarStatisticApi } from "@/api/MetarStatisticApi";
-import Hint from "@/components/common/Hint";
 import { ThresholdKpiCardGrid } from "@/pages/threshold/components/ThresholdKpiGrid";
 import Topbar from "@/components/topbar/Topbar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { groupHourly, groupMonthly } from "@/lib/count";
-import { monthShortNames, toUTCInput, utcInputToISO } from "@/lib/date";
+import { monthShortNames, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -33,7 +31,7 @@ import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { usePageScope } from "@/context/scope/usePageScope";
-import { PAGE_DEFAULTS } from "@/context/scope/PageDefaults";
+import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 
 export default function Altimeter() {
   const { icao, from, to, threshold, setIcao, setFrom, setTo, setThreshold: setThreshold } = usePageScope({ pageId: "altimeter", defaults: { ...PAGE_DEFAULTS.altimeter } });
@@ -378,7 +376,7 @@ export default function Altimeter() {
             <li>
               Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
               inclusive, To exclusive). Set <strong>Altimeter ≤ N hPa</strong>.
-              Click <strong>Fetch</strong>.
+              Click <strong>Search</strong>.
             </li>
             <li>
               Top cards summarize <strong>Sample Size</strong>,{" "}

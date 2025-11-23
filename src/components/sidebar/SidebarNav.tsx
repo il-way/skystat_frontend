@@ -1,11 +1,9 @@
 import {
   BarChart3,
   Copyright,
-  Database,
   Eye,
   Feather,
   Gauge,
-  GaugeCircle,
   Mail,
   Sun,
   ThermometerSnowflake,
@@ -29,8 +27,8 @@ export default function SidebarNav() {
       <SidebarHeader>
         <div className="px-3 py-2">
           <div className="flex items-center gap-2">
-            <GaugeCircle className="h-5 w-5" />
-            <span className="font-semibold">Skystat</span>
+            <img src="/icon_color.png" className="h-5 w-5" />
+            <span className="font-semibold">SkyStat</span>
           </div>
           <div className="text-xs text-muted-foreground mt-1">
             Aviation Weather Analytics
