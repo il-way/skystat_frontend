@@ -31,7 +31,7 @@ import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { usePageScope } from "@/context/scope/usePageScope";
-import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
+import { PAGE_DEFAULTS, PAGE_ID_THRESHOLD } from "@/context/scope/pageDefaults";
 
 export default function Wind() {
   const { icao, from, to, threshold, setIcao, setFrom, setTo, setThreshold: setThreshold } = usePageScope({ pageId: "wind", defaults: { ...PAGE_DEFAULTS.wind } });
@@ -74,6 +74,15 @@ export default function Wind() {
   }, [error]);
 
   async function handleFetch() {
+    const thresholdMin = PAGE_ID_THRESHOLD["visibility"].min;
+    const thresholdMax = PAGE_ID_THRESHOLD["visibility"].max;
+
+    if (Number(threshold) < thresholdMin || Number(threshold) > thresholdMax) {
+      setErrDetails(`Value must be range ${thresholdMin} ~ ${thresholdMax}KT`);
+      setErrOpen(true);
+      return;
+    }
+
     setLoading(true);
     try {
       const r = await refetch();
@@ -143,6 +152,7 @@ export default function Wind() {
               <input
                 type="number"
                 min={0}
+                max={99}
                 className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
                 value={threshold}
                 onChange={(e) =>

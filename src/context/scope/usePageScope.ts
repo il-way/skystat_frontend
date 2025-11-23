@@ -29,7 +29,10 @@ export function usePageScope(opts: { pageId: PageId; defaults: ScopeState }) {
     reset: () =>
       dispatch({ type: "reset", defaults }),
     setThreshold: (v: string) => {
-      if (PAGE_ID_THRESHOLD[pageId]) return dispatch({ type: "patch", patch: { threshold: v } });
+      const threshold = PAGE_ID_THRESHOLD[pageId];
+      if (threshold.use) {
+        return dispatch({ type: "patch", patch: { threshold: v } });
+      }
     }
   };
 

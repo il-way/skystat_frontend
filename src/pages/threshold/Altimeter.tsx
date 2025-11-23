@@ -31,10 +31,22 @@ import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { usePageScope } from "@/context/scope/usePageScope";
-import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
+import { PAGE_DEFAULTS, PAGE_ID_THRESHOLD } from "@/context/scope/pageDefaults";
 
 export default function Altimeter() {
-  const { icao, from, to, threshold, setIcao, setFrom, setTo, setThreshold: setThreshold } = usePageScope({ pageId: "altimeter", defaults: { ...PAGE_DEFAULTS.altimeter } });
+  const {
+    icao,
+    from,
+    to,
+    threshold,
+    setIcao,
+    setFrom,
+    setTo,
+    setThreshold: setThreshold,
+  } = usePageScope({
+    pageId: "altimeter",
+    defaults: { ...PAGE_DEFAULTS.altimeter },
+  });
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
 
@@ -74,6 +86,15 @@ export default function Altimeter() {
   }, [error]);
 
   async function handleFetch() {
+    const thresholdMin = PAGE_ID_THRESHOLD["altimeter"].min;
+    const thresholdMax = PAGE_ID_THRESHOLD["altimeter"].max;
+
+    if (Number(threshold) < thresholdMin || Number(threshold) > thresholdMax) {
+      setErrDetails(`Value must be range ${thresholdMin} ~ ${thresholdMax}hPa`);
+      setErrOpen(true);
+      return;
+    }
+    
     setLoading(true);
     try {
       const r = await refetch();
@@ -109,9 +130,12 @@ export default function Altimeter() {
   const [monthSel, setMonthSel] = useState<number>(1);
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
-  const status: PageTrailStatus = data && data.totalCount > 0
-    ? "summary"
-    : error === null ? "no-data" : "error";
+  const status: PageTrailStatus =
+    data && data.totalCount > 0
+      ? "summary"
+      : error === null
+      ? "no-data"
+      : "error";
 
   const monthSeries =
     yearSel === "total"
@@ -141,7 +165,8 @@ export default function Altimeter() {
               <div className="flex items-center text-sm px-2">Altimeter ≤</div>
               <input
                 type="number"
-                min={0}
+                min={900}
+                max={1099}
                 className="h-9 w-28 rounded-md border text-muted-foreground bg-background px-2 text-sm"
                 value={threshold}
                 onChange={(e) =>
@@ -162,9 +187,7 @@ export default function Altimeter() {
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Monthly Observed Days
-            </CardTitle>
+            <CardTitle className="text-base">Monthly Observed Days</CardTitle>
             <div className="flex items-center gap-2">
               <Select
                 value={String(yearSel)}
@@ -206,18 +229,18 @@ export default function Altimeter() {
             className={`w-full min-w-0 ${mtView === "graph" ? "h-80" : ""}`}
           >
             {mtView === "graph" ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="monthShortName" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={monthSeries}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="monthShortName" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -257,9 +280,7 @@ export default function Altimeter() {
         {/* ==== (2) 시간별 관측횟수: 연/월 선택 그래프/테이블 + 합계 지원 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Hourly Observed Days
-            </CardTitle>
+            <CardTitle className="text-base">Hourly Observed Days</CardTitle>
             <div className="flex items-center gap-2">
               <Select
                 value={String(yearSel)}
@@ -324,7 +345,11 @@ export default function Altimeter() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" />
                   <YAxis allowDecimals={false} />
-                  <Tooltip labelFormatter={(label) => `${String(label).padStart(2, "0")}Z (UTC)`}/>
+                  <Tooltip
+                    labelFormatter={(label) =>
+                      `${String(label).padStart(2, "0")}Z (UTC)`
+                    }
+                  />
                   <Bar dataKey="count" />
                 </BarChart>
               </ResponsiveContainer>

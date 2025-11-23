@@ -13,14 +13,20 @@ export type PageId =
 const from2019 = toUTCInput(Date.UTC(2019, 0, 1, 0, 0));
 const to2023 = toUTCInput(Date.UTC(2023, 0, 1, 0, 0));
 
-export const PAGE_ID_THRESHOLD: Record<PageId, boolean> = {
-  "dashboard": false,
-  "altimeter": true,
-  "visibility": true,
-  "weather": true,
-  "wind": true,
-  "temperature": false,
-  "windrose": false,
+export type ThresholdLimit = {
+  use: boolean,
+  min: number,
+  max: number
+};
+
+export const PAGE_ID_THRESHOLD: Record<PageId, ThresholdLimit> = {
+  "dashboard": { use: false, min: -1, max: -1 },
+  "altimeter": { use: true, min: 900, max: 1099 },
+  "visibility": { use: true, min: 0, max: 9999 },
+  "weather": { use: true, min: -1, max: -1 },
+  "wind": { use: true, min: 0, max: 99 },
+  "temperature": { use: false, min: -1, max: -1 },
+  "windrose": { use: false, min: -1, max: -1 },
 };
 
 export const PAGE_DEFAULTS: Record<PageId, ScopeState> = {
