@@ -32,6 +32,7 @@ import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus"
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { usePageScope } from "@/context/scope/usePageScope";
 import { PAGE_DEFAULTS, PAGE_ID_THRESHOLD } from "@/context/scope/pageDefaults";
+import { LoadingWrapper } from "@/components/common/LoadingWrapper";
 
 export default function Wind() {
   const { icao, from, to, threshold, setIcao, setFrom, setTo, setThreshold: setThreshold } = usePageScope({ pageId: "wind", defaults: { ...PAGE_DEFAULTS.wind } });
@@ -170,7 +171,9 @@ export default function Wind() {
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         <PageTrailstatusBar page="Wind" status={status} hint="[kt]" />
 
-        <ThresholdKpiCardGrid kpis={kpis} />
+        <LoadingWrapper loading={loading || isFetching}>
+          <ThresholdKpiCardGrid kpis={kpis} />
+        </LoadingWrapper>
 
         <SimpleAlertModal
           open={errOpen}
@@ -181,203 +184,207 @@ export default function Wind() {
         />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
-        <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
-          <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Monthly Observed Days
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Select
-                value={String(yearSel)}
-                onValueChange={(v) =>
-                  setYearSel(v === "total" ? "total" : Number(v))
-                }
-              >
-                <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthAgg.years.map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="total">total</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="ml-auto flex gap-2">
-                <Button
-                  size="sm"
-                  variant={mtView === "graph" ? "default" : "secondary"}
-                  onClick={() => setMtView("graph")}
+        <LoadingWrapper loading={loading || isFetching}>
+          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+            <CardHeader className="pb-2 space-y-2">
+              <CardTitle className="text-base">
+                Monthly Observed Days
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={String(yearSel)}
+                  onValueChange={(v) =>
+                    setYearSel(v === "total" ? "total" : Number(v))
+                  }
                 >
-                  Graph
-                </Button>
-                <Button
-                  size="sm"
-                  variant={mtView === "table" ? "default" : "secondary"}
-                  onClick={() => setMtView("table")}
-                >
-                  Table
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent
-            className={`w-full min-w-0 ${mtView === "graph" ? "h-80" : ""}`}
-          >
-            {mtView === "graph" ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="monthShortName" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <colgroup>
-                    <col className="w-1/2" />
-                    <col className="w-1/2" />
-                  </colgroup>
-                  <thead className="text-left text-muted-foreground border-b">
-                    <tr>
-                      <th className="py-2 pr-4">Month</th>
-                      <th className="py-2 pr-4">Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {monthSeries.map((r) => (
-                      <tr
-                        key={r.monthShortName}
-                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
-                      >
-                        <td className="py-2 pl-2 pr-4">{r.monthShortName}</td>
-                        <td className="py-2 pl-2 pr-4">{r.count}</td>
-                      </tr>
+                  <SelectTrigger className="h-8 w-28">
+                    <SelectValue placeholder="year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthAgg.years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
                     ))}
-                    <tr className="font-medium">
-                      <td className="py-2 pl-2 pr-4">TOTAL</td>
-                      <td className="py-2 pl-2 pr-4">
-                        {monthSeries.reduce((a, b) => a + b.count, 0)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                    <SelectItem value="total">total</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="ml-auto flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={mtView === "graph" ? "default" : "secondary"}
+                    onClick={() => setMtView("graph")}
+                  >
+                    Graph
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={mtView === "table" ? "default" : "secondary"}
+                    onClick={() => setMtView("table")}
+                  >
+                    Table
+                  </Button>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent
+              className={`w-full min-w-0 ${mtView === "graph" ? "h-80" : ""}`}
+            >
+              {mtView === "graph" ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={monthSeries}
+                      margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="monthShortName" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="count" />
+                    </BarChart>
+                  </ResponsiveContainer>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <colgroup>
+                      <col className="w-1/2" />
+                      <col className="w-1/2" />
+                    </colgroup>
+                    <thead className="text-left text-muted-foreground border-b">
+                      <tr>
+                        <th className="py-2 pr-4">Month</th>
+                        <th className="py-2 pr-4">Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthSeries.map((r) => (
+                        <tr
+                          key={r.monthShortName}
+                          className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                        >
+                          <td className="py-2 pl-2 pr-4">{r.monthShortName}</td>
+                          <td className="py-2 pl-2 pr-4">{r.count}</td>
+                        </tr>
+                      ))}
+                      <tr className="font-medium">
+                        <td className="py-2 pl-2 pr-4">TOTAL</td>
+                        <td className="py-2 pl-2 pr-4">
+                          {monthSeries.reduce((a, b) => a + b.count, 0)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </LoadingWrapper>
 
         {/* ==== (2) 시간별 관측횟수: 연/월 선택 그래프/테이블 + 합계 지원 ==== */}
-        <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
-          <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Hourly Observed Days
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Select
-                value={String(yearSel)}
-                onValueChange={(v) =>
-                  setYearSel(v === "total" ? "total" : Number(v))
-                }
-              >
-                <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {hourAgg.years.map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="total">total</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={String(monthSel)}
-                onValueChange={(v) => setMonthSel(Number(v))}
-              >
-                <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthShortNames.map((m, i) => (
-                    <SelectItem key={m} value={String(i + 1)}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="ml-auto flex gap-2">
-                <Button
-                  size="sm"
-                  variant={hrView === "graph" ? "default" : "secondary"}
-                  onClick={() => setHrView("graph")}
+        <LoadingWrapper loading={loading || isFetching}>
+          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+            <CardHeader className="pb-2 space-y-2">
+              <CardTitle className="text-base">
+                Hourly Observed Days
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={String(yearSel)}
+                  onValueChange={(v) =>
+                    setYearSel(v === "total" ? "total" : Number(v))
+                  }
                 >
-                  Graph
-                </Button>
-                <Button
-                  size="sm"
-                  variant={hrView === "table" ? "default" : "secondary"}
-                  onClick={() => setHrView("table")}
-                >
-                  Table
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent
-            className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
-          >
-            {hrView === "graph" ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={hourSeries}
-                    margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip labelFormatter={(label) => `${String(label).padStart(2, "0")}Z (UTC)`}/>
-                    <Bar dataKey="count" />
-                  </BarChart>
-                </ResponsiveContainer>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <colgroup>
-                    <col className="w-1/2" />
-                    <col className="w-1/2" />
-                  </colgroup>
-                  <thead className="text-left text-muted-foreground border-b">
-                    <tr>
-                      <th className="py-2 pl-2 pr-4">Hour</th>
-                      <th className="py-2 pl-2 pr-4">Count</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {hourSeries.map((r) => (
-                      <tr
-                        key={r.hour}
-                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
-                      >
-                        <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
-                        <td className="py-2 pl-2 pr-4">{r.count}</td>
-                      </tr>
+                  <SelectTrigger className="h-8 w-28">
+                    <SelectValue placeholder="year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hourAgg.years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
                     ))}
-                  </tbody>
-                </table>
+                    <SelectItem value="total">total</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={String(monthSel)}
+                  onValueChange={(v) => setMonthSel(Number(v))}
+                >
+                  <SelectTrigger className="h-8 w-28">
+                    <SelectValue placeholder="month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthShortNames.map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="ml-auto flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={hrView === "graph" ? "default" : "secondary"}
+                    onClick={() => setHrView("graph")}
+                  >
+                    Graph
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={hrView === "table" ? "default" : "secondary"}
+                    onClick={() => setHrView("table")}
+                  >
+                    Table
+                  </Button>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent
+              className={`w-full min-w-0 ${hrView === "graph" ? "h-80" : ""}`}
+            >
+              {hrView === "graph" ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={hourSeries}
+                      margin={{ top: 10, right: 20, left: 10, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hour" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip labelFormatter={(label) => `${String(label).padStart(2, "0")}Z (UTC)`}/>
+                      <Bar dataKey="count" />
+                    </BarChart>
+                  </ResponsiveContainer>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <colgroup>
+                      <col className="w-1/2" />
+                      <col className="w-1/2" />
+                    </colgroup>
+                    <thead className="text-left text-muted-foreground border-b">
+                      <tr>
+                        <th className="py-2 pl-2 pr-4">Hour</th>
+                        <th className="py-2 pl-2 pr-4">Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {hourSeries.map((r) => (
+                        <tr
+                          key={r.hour}
+                          className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                        >
+                          <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
+                          <td className="py-2 pl-2 pr-4">{r.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </LoadingWrapper>
 
         <Separator />
         {/* Next steps */}

@@ -27,6 +27,7 @@ import type { WindroseKpiValues } from "./type/WindroseKpiValues";
 import { WindroseKpiGrid } from "./WindroseKpiGrid";
 import { usePageScope } from "@/context/scope/usePageScope";
 import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
+import { LoadingWrapper } from "@/components/common/LoadingWrapper";
 
 export default function Windrose() {
   const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "windrose", defaults: { ...PAGE_DEFAULTS.windrose } });
@@ -127,7 +128,9 @@ export default function Windrose() {
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         <PageTrailstatusBar page="Windrose" status={status} hint="[%] gusts not included" />
 
-        <WindroseKpiGrid kpis={kpis} />
+        <LoadingWrapper loading={loading || isFetching}>
+          <WindroseKpiGrid kpis={kpis} />
+        </LoadingWrapper>
 
         <SimpleAlertModal
           open={errOpen}
@@ -138,117 +141,119 @@ export default function Windrose() {
         />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
-        <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
-          <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Monthly Observed
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Select
-                value={String(monthSel)}
-                onValueChange={(v) => setMonthSel(Number(v))}
-              >
-                <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthShortNames.map((m, i) => (
-                    <SelectItem key={m} value={String(i + 1)}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="ml-auto flex gap-2">
-                <Button
-                  size="sm"
-                  variant={view === "graph" ? "default" : "secondary"}
-                  onClick={() => setView("graph")}
+        <LoadingWrapper loading={loading || isFetching}>
+          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+            <CardHeader className="pb-2 space-y-2">
+              <CardTitle className="text-base">
+                Monthly Observed
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={String(monthSel)}
+                  onValueChange={(v) => setMonthSel(Number(v))}
                 >
-                  Graph
-                </Button>
-                <Button
-                  size="sm"
-                  variant={view === "table" ? "default" : "secondary"}
-                  onClick={() => setView("table")}
-                >
-                  Table
-                </Button>
+                  <SelectTrigger className="h-8 w-28">
+                    <SelectValue placeholder="month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthShortNames.map((m, i) => (
+                      <SelectItem key={m} value={String(i + 1)}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="ml-auto flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={view === "graph" ? "default" : "secondary"}
+                    onClick={() => setView("graph")}
+                  >
+                    Graph
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={view === "table" ? "default" : "secondary"}
+                    onClick={() => setView("table")}
+                  >
+                    Table
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent
-            className={`w-full min-w-0 ${view === "graph" ? "h-160" : ""}`}
-          >
-            {view === "graph" ? (
-              <div className="w-full h-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <div className="w-full">
-                    {hasData ? (
-                      <ReactEChartsCore
-                        echarts={echarts}
-                        option={echartOptions}
-                        style={{ width: "100%", height: "100%" }}
-                        notMerge={true}
-                        lazyUpdate={true}
-                      />
-                    ) : (
-                      <Hint text="No data to display." />
-                    )}
-                  </div>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <colgroup>
-                    <col className="w-1/7" />
-                    <col className="w-1/7" />
-                    <col className="w-1/7" />
-                    <col className="w-1/7" />
-                    <col className="w-1/7" />
-                    <col className="w-1/7" />
-                    <col className="w-1/7" />
-                  </colgroup>
-                  <thead className="text-left text-muted-foreground border-b">
-                    <tr>
-                      <th className="py-2 pr-4 text-right">Direction</th>
-                      {dataset.speedBins
-                        .filter((s) => s.toUpperCase() !== "CALM")
-                        .map((s) => (
-                          <th key={s} className="py-2 pr-4 text-center">
-                            {s}
-                          </th>
-                        ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dataset.directionBins.map((r, i) => (
-                      <tr
-                        key={r}
-                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
-                      >
-                        <td className="py-2 pr-4 font-medium text-right">
-                          {r}
-                        </td>
-                        {dataset.series[monthShortNames[monthSel - 1]]
-                          .filter((s) => s.speedBin.toUpperCase() !== "CALM")
+            </CardHeader>
+            <CardContent
+              className={`w-full min-w-0 ${view === "graph" ? "h-160" : ""}`}
+            >
+              {view === "graph" ? (
+                <div className="w-full h-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <div className="w-full">
+                      {hasData ? (
+                        <ReactEChartsCore
+                          echarts={echarts}
+                          option={echartOptions}
+                          style={{ width: "100%", height: "100%" }}
+                          notMerge={true}
+                          lazyUpdate={true}
+                        />
+                      ) : (
+                        <Hint text="No data to display." />
+                      )}
+                    </div>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <colgroup>
+                      <col className="w-1/7" />
+                      <col className="w-1/7" />
+                      <col className="w-1/7" />
+                      <col className="w-1/7" />
+                      <col className="w-1/7" />
+                      <col className="w-1/7" />
+                      <col className="w-1/7" />
+                    </colgroup>
+                    <thead className="text-left text-muted-foreground border-b">
+                      <tr>
+                        <th className="py-2 pr-4 text-right">Direction</th>
+                        {dataset.speedBins
+                          .filter((s) => s.toUpperCase() !== "CALM")
                           .map((s) => (
-                            <td
-                              key={s.speedBin}
-                              className="py-2 pl-2 pr-4 text-center"
-                            >
-                              {s.data[i]}
-                            </td>
+                            <th key={s} className="py-2 pr-4 text-center">
+                              {s}
+                            </th>
                           ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </thead>
+                    <tbody>
+                      {dataset.directionBins.map((r, i) => (
+                        <tr
+                          key={r}
+                          className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                        >
+                          <td className="py-2 pr-4 font-medium text-right">
+                            {r}
+                          </td>
+                          {dataset.series[monthShortNames[monthSel - 1]]
+                            .filter((s) => s.speedBin.toUpperCase() !== "CALM")
+                            .map((s) => (
+                              <td
+                                key={s.speedBin}
+                                className="py-2 pl-2 pr-4 text-center"
+                              >
+                                {s.data[i]}
+                              </td>
+                            ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </LoadingWrapper>
 
         <Separator />
         {/* Next steps */}
