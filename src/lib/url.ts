@@ -4,6 +4,7 @@ import type { TemperatureStatisticQueryParams } from "@/api/types/request/statis
 import type { ThresholdStatisticQueryParams } from "@/api/types/request/statistic/ThresholdStatisticQueryParams";
 import type { WeatherStatisticQueryParams } from "@/api/types/request/statistic/WeatherStatisticQueryParams";
 import { validatePeriod } from "./date";
+import type { MonthlyCountSummaryQueryParams } from "@/api/types/request/statistic/MonthlyCountSummaryQueryParams";
 
 export function buildThresholdURL(params: ThresholdStatisticQueryParams): string {
   const { icao, field, comparison, unit, startISO, endISO } = params;
@@ -78,10 +79,28 @@ export function buildMetarInventoryURL(icao: string): string {
   return `/metar/inventory?icao=${encodeURIComponent(icao)}`;
 }
 
+export function buildMonthlyCountSummaryURL(params: MonthlyCountSummaryQueryParams): string {
+  const { icao, startISO, endISO, windPeakThreshold, visibilityThreshold, ceilingThreshold, phenomenon, descriptor } = params;
+  validatePeriod(startISO, endISO);
+  const path = "/metar/summary/count";
+  const queryString = new URLSearchParams({
+    icao,
+    startDateTime: startISO,
+    endDateTime: endISO,
+    windPeakThreshold: String(windPeakThreshold) || "30",
+    visibilityThreshold: String(visibilityThreshold) || "800",
+    ceilingThreshold: String(ceilingThreshold) || "200",
+    phenomenon: phenomenon ?? "SN",
+    descriptor: descriptor ?? "TS",
+  });
+
+  return `${path}?${queryString}`;
+}
+
 export function buildAverageSummaryURL(params: BasicQueryParams): string {
   const { icao, startISO, endISO } = params;
   validatePeriod(startISO, endISO);
-  const path = "/metar/average/summary";
+  const path = "/metar/summary/average";
   const queryString = new URLSearchParams({
     icao,
     startDateTime: startISO,

@@ -4,11 +4,7 @@ import { DashboardKpiCardGrid } from "@/pages/dashboard/components/DashboardKpiG
 import DashboardTable from "@/pages/dashboard/components/DashboardTable";
 import Topbar from "@/components/topbar/Topbar";
 import { Separator } from "@/components/ui/separator";
-import {
-  monthShortNameFrom,
-  monthShortNames,
-  utcInputToISO,
-} from "@/lib/date";
+import { monthShortNameFrom, monthShortNames, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import type { DashboardKpiValues } from "@/pages/dashboard/types/DashboardKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -22,9 +18,13 @@ import { emptyDashboardTableRows } from "./DashboardHelper";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { usePageScope } from "@/context/scope/usePageScope";
 import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
+import { LoadingWrapper } from "@/components/common/LoadingWrapper";
 
 export default function Dashboard() {
-  const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "dashboard", defaults: { ...PAGE_DEFAULTS.dashboard } });
+  const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({
+    pageId: "dashboard",
+    defaults: { ...PAGE_DEFAULTS.dashboard },
+  });
   const [loading, setLoading] = useState(false);
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
@@ -60,7 +60,14 @@ export default function Dashboard() {
   } = useQuery({
     queryKey: ["dashboard-table-stats", basicQueryParams],
     queryFn: async () =>
-      MetarStatisticApi.fetchDashboadTableSummary(basicQueryParams),
+      MetarStatisticApi.fetchMonthlyCountSummary({ 
+        ...basicQueryParams, 
+        windPeakThreshold: 30,
+        visibilityThreshold: 800,
+        ceilingThreshold: 200,
+        phenomenon: "SN",
+        descriptor: "TS",
+      }),
     enabled: false,
     placeholderData: keepPreviousData,
   });
@@ -99,8 +106,7 @@ export default function Dashboard() {
       }
     } catch {
       setErrOpen(true);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   }
@@ -137,9 +143,10 @@ export default function Dashboard() {
   const isAnyFetching =
     loading || avgIsFetching || tableIsFetching || avgWindIsFetching;
 
-  const status = avg && avg.totalCount > 0 
-    ? "summary"
-    : avgError === null && tableError === null && avgWindError === null
+  const status =
+    avg && avg.totalCount > 0
+      ? "summary"
+      : avgError === null && tableError === null && avgWindError === null
       ? "no-data"
       : "error";
 
@@ -162,20 +169,6 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* Breadcrumb / Context */}
         <PageTrailstatusBar page="Dashboard" status={status} />
-        
-        {/* KPIs */}
-        <DashboardKpiCardGrid kpis={kpis} />
-
-        {/* Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <WindLineChart data={windLineData} />
-        </motion.div>
-
-        {/* Table */}
-        <DashboardTable rows={tableRows || emptyDashboardTableRows()} />
 
         <SimpleAlertModal
           open={errOpen}
@@ -184,6 +177,26 @@ export default function Dashboard() {
           okText="OK"
           blockOutsideClose
         />
+
+        {/* KPIs */}
+        <LoadingWrapper loading={loading || avgIsFetching}>
+          <DashboardKpiCardGrid kpis={kpis} />
+        </LoadingWrapper>
+        
+        {/* Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <LoadingWrapper loading={loading || avgWindIsFetching}>
+            <WindLineChart data={windLineData} />
+          </LoadingWrapper>
+        </motion.div>
+
+        {/* Table */}
+        <LoadingWrapper loading={loading || tableIsFetching}>
+          <DashboardTable rows={tableRows || emptyDashboardTableRows()} />
+        </LoadingWrapper>
 
         <Separator />
 

@@ -44,7 +44,7 @@ export default function Temperature() {
     defaults: { ...PAGE_DEFAULTS.temperature },
   });
   const [errOpen, setErrOpen] = useState(false);
-  const [errDetails, setErrDetails] = useState("");
+  const [errDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
   const queryParams: TemperatureStatisticQueryParams = useMemo(
