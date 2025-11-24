@@ -91,6 +91,8 @@ export default function Wind() {
         setErrDetails(getErrorMessage(e));
         setErrOpen(true);
       }
+    } catch {
+      setErrOpen(true);
     } finally {
       setLoading(false);
     }
@@ -169,6 +171,14 @@ export default function Wind() {
         <PageTrailstatusBar page="Wind" status={status} hint="[kt]" />
 
         <ThresholdKpiCardGrid kpis={kpis} />
+
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
@@ -368,14 +378,6 @@ export default function Wind() {
             )}
           </CardContent>
         </Card>
-
-        <SimpleAlertModal
-          open={errOpen}
-          onOpenChange={setErrOpen}
-          details={errDetails}
-          okText="OK"
-          blockOutsideClose
-        />
 
         <Separator />
         {/* Next steps */}

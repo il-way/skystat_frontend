@@ -16,7 +16,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { ResponsiveContainer } from "recharts";
 import { Separator } from "@/components/ui/separator";
-import ReactECharts from "echarts-for-react";
+import ReactEChartsCore from "echarts-for-react/lib/core";
+import echarts from "@/utils/echarts";
 import { buildEchartOptions, buildWindroseDataset } from "./WindroseHelper";
 import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
@@ -72,6 +73,8 @@ export default function Windrose() {
         setErrDetails(getErrorMessage(e));
         setErrOpen(true);
       }
+    } catch {
+      setErrOpen(true);
     } finally {
       setLoading(false);
     }
@@ -126,6 +129,14 @@ export default function Windrose() {
 
         <WindroseKpiGrid kpis={kpis} />
 
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
+
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
@@ -174,7 +185,8 @@ export default function Windrose() {
                 <ResponsiveContainer width="100%" height="100%">
                   <div className="w-full">
                     {hasData ? (
-                      <ReactECharts
+                      <ReactEChartsCore
+                        echarts={echarts}
                         option={echartOptions}
                         style={{ width: "100%", height: "100%" }}
                         notMerge={true}
@@ -237,14 +249,6 @@ export default function Windrose() {
             )}
           </CardContent>
         </Card>
-
-        <SimpleAlertModal
-          open={errOpen}
-          onOpenChange={setErrOpen}
-          details={errDetails}
-          okText="OK"
-          blockOutsideClose
-        />
 
         <Separator />
         {/* Next steps */}

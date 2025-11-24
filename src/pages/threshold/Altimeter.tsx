@@ -94,7 +94,7 @@ export default function Altimeter() {
       setErrOpen(true);
       return;
     }
-    
+
     setLoading(true);
     try {
       const r = await refetch();
@@ -103,7 +103,9 @@ export default function Altimeter() {
         setErrDetails(getErrorMessage(e));
         setErrOpen(true);
       }
-    } finally {
+    } catch {
+      setErrOpen(true);
+    }finally {
       setLoading(false);
     }
   }
@@ -183,6 +185,14 @@ export default function Altimeter() {
         <PageTrailstatusBar page="Altimeter" status={status} hint="[hPa]" />
 
         <ThresholdKpiCardGrid kpis={kpis} />
+
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
@@ -382,14 +392,6 @@ export default function Altimeter() {
             )}
           </CardContent>
         </Card>
-
-        <SimpleAlertModal
-          open={errOpen}
-          onOpenChange={setErrOpen}
-          details={errDetails}
-          okText="OK"
-          blockOutsideClose
-        />
 
         <Separator />
         {/* Next steps */}

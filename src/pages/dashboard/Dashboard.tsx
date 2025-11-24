@@ -97,7 +97,10 @@ export default function Dashboard() {
         setErrDetails(getErrorMessage(e));
         setErrOpen(true);
       }
-    } finally {
+    } catch {
+      setErrOpen(true);
+    }
+    finally {
       setLoading(false);
     }
   }

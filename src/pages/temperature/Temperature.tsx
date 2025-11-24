@@ -30,6 +30,7 @@ import type { TemperaturedKpiValues } from "./types/TemperaturedKpiValues";
 import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 import { usePageScope } from "@/context/scope/usePageScope";
+import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 
 const TEMP_COLORS = {
   maxAvg: "#ef4444", // red   — mean T_max
@@ -38,8 +39,12 @@ const TEMP_COLORS = {
 } as const;
 
 export default function Temperature() {
-  const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "temperature", defaults: { ...PAGE_DEFAULTS.temperature } });
-
+  const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({
+    pageId: "temperature",
+    defaults: { ...PAGE_DEFAULTS.temperature },
+  });
+  const [errOpen, setErrOpen] = useState(false);
+  const [errDetails, setErrDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
   const queryParams: TemperatureStatisticQueryParams = useMemo(
@@ -67,6 +72,8 @@ export default function Temperature() {
     setLoading(true);
     try {
       await refetch();
+    } catch {
+      setErrOpen(true);
     } finally {
       setLoading(false);
     }
@@ -81,9 +88,12 @@ export default function Temperature() {
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
 
-  const status = data && data.totalCount > 0 
-    ? "summary" 
-    : error === null ? "no-data" : "error";
+  const status =
+    data && data.totalCount > 0
+      ? "summary"
+      : error === null
+      ? "no-data"
+      : "error";
 
   const monthSeries =
     yearSel === "total"
@@ -134,16 +144,22 @@ export default function Temperature() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <PageTrailstatusBar page="Temperature" status={status} hint="[℃]"/>
+        <PageTrailstatusBar page="Temperature" status={status} hint="[℃]" />
 
         <TemperatureKpiGrid kpis={kpis} />
+
+        <SimpleAlertModal
+          open={errOpen}
+          onOpenChange={setErrOpen}
+          details={errDetails}
+          okText="OK"
+          blockOutsideClose
+        />
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Monthly Observed Days
-            </CardTitle>
+            <CardTitle className="text-base">Monthly Observed Days</CardTitle>
             <div className="flex items-center gap-2">
               <Select
                 value={String(yearSel)}
@@ -297,9 +313,7 @@ export default function Temperature() {
         {/* ==== (2) 시간별 관측횟수: 연/월 선택 그래프/테이블 + 합계 지원 ==== */}
         <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
           <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">
-              Hourly Observed Days
-            </CardTitle>
+            <CardTitle className="text-base">Hourly Observed Days</CardTitle>
             <div className="flex items-center gap-2">
               <Select
                 value={String(yearSel)}
@@ -364,7 +378,11 @@ export default function Temperature() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="hour" />
                   <YAxis unit="°C" allowDecimals />
-                  <Tooltip labelFormatter={(label) => `${String(label).padStart(2, "0")}Z (UTC)`}/>
+                  <Tooltip
+                    labelFormatter={(label) =>
+                      `${String(label).padStart(2, "0")}Z (UTC)`
+                    }
+                  />
                   <Legend />
                   <Line type="monotone" dataKey="mean" name="mean T" dot />
                 </LineChart>
@@ -436,7 +454,9 @@ export default function Temperature() {
               <strong>total</strong> row; monthly block lists the same per
               month.
             </li>
-            <li className="list-none"><em>Overbars indicate “mean”.</em></li>
+            <li className="list-none">
+              <em>Overbars indicate “mean”.</em>
+            </li>
             <li>
               Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
               <strong>total/year</strong> and <strong>month</strong> selectors.
