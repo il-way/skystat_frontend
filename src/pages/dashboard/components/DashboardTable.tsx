@@ -3,7 +3,6 @@ import { useMemo, type JSX } from "react";
 import Hint from "../../../components/common/Hint";
 import type { DashboardTableRow } from "@/pages/dashboard/types/DashboardTable";
 import { monthShortNameFrom } from "@/lib/date";
-import { ResponsiveContainer } from "recharts";
 
 export default function DashboardTable({ rows }: { rows: DashboardTableRow[] }): JSX.Element {
   const nf = useMemo(() => new Intl.NumberFormat("en-US"), []);

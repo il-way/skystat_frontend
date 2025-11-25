@@ -33,7 +33,6 @@ export default function Windrose() {
   const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "windrose", defaults: { ...PAGE_DEFAULTS.windrose } });
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
-
   const [loading, setLoading] = useState(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(

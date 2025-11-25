@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { monthShortNames } from "@/lib/date";
 import type { TemperatureStatisticQueryParams } from "@/api/types/request/statistic/TemperatureStatisticQueryParams";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -32,6 +32,7 @@ import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 import { usePageScope } from "@/context/scope/usePageScope";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import { LoadingWrapper } from "@/components/common/LoadingWrapper";
+import { getErrorMessage } from "@/lib/page";
 
 const TEMP_COLORS = {
   maxAvg: "#ef4444", // red   — mean T_max
@@ -45,7 +46,7 @@ export default function Temperature() {
     defaults: { ...PAGE_DEFAULTS.temperature },
   });
   const [errOpen, setErrOpen] = useState(false);
-  const [errDetails] = useState("");
+  const [errDetails, setErrDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
   const queryParams: TemperatureStatisticQueryParams = useMemo(
@@ -68,6 +69,14 @@ export default function Temperature() {
     enabled: false,
     placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    const err = error;
+    if (err) {
+      setErrDetails(getErrorMessage(err));
+      setErrOpen(true);
+    }
+  }, [error]);
 
   async function handleFetch() {
     setLoading(true);
