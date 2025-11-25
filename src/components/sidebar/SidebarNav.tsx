@@ -57,7 +57,7 @@ export default function SidebarNav() {
           <Copyright className="h-3 w-3" /> Created by il-way
         </div>
         <div className="px-3 pb-2 text-xs text-muted-foreground flex items-center gap-2">
-          <Mail className="h-3 w-3" /> ilway5186@google.com
+          <Mail className="h-3 w-3" /> ilway5186@gmail.com
         </div>
       </SidebarFooter>
     </Sidebar>
