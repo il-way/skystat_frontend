@@ -3,27 +3,28 @@ import { useMemo, type JSX } from "react";
 import Hint from "../../../components/common/Hint";
 import type { DashboardTableRow } from "@/pages/dashboard/types/DashboardTable";
 import { monthShortNameFrom } from "@/lib/date";
+import { ResponsiveContainer } from "recharts";
 
 export default function DashboardTable({ rows }: { rows: DashboardTableRow[] }): JSX.Element {
   const nf = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Monthly Observed Days</CardTitle>
         <CardDescription>For each calendar month, this table counts the number of days that satisfy the condition.</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-w-[80vw] sm:max-w-full">
           <table className="w-full text-sm">
-              <colgroup>
-                <col className="w-1/6" />
-                <col className="w-1/6" />
-                <col className="w-1/6" />
-                <col className="w-1/6" />
-                <col className="w-1/6" />
-                <col className="w-1/6" />
-              </colgroup>
+            <colgroup>
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+              <col className="w-1/6" />
+            </colgroup>
 
             <thead className="text-left text-muted-foreground">
               <tr className="border-b">

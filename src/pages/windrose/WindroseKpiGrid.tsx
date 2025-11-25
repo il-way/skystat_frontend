@@ -11,7 +11,7 @@ export function WindroseKpiGrid({ kpis }: { kpis: WindroseKpiValues }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <KpiCard title="Sample Size" value={totalCount.toString()} hint={`METAR (${coverageHint})`} />
+      <KpiCard title="Sample Size" value={totalCount.toString()} hint={`${coverageHint}`} />
       <KpiCard title="Wind Variable" value={windVariablePercent.toString()} hint="%" />
       <KpiCard title="Speed Scale" value={speedBins.length.toString()} hint="levels" />
       <KpiCard title="Direction Scale" value={directionBins.length.toString()} hint="cardinal" />

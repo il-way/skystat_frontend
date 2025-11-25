@@ -15,7 +15,7 @@ export function dataCoverageHint(coverageFrom: string, coverageTo: string, isFet
   
   if (!hasData) coverageHint = "No Data";
   if (coverageFrom !== "" && coverageTo !== "") {
-    coverageHint = `${coverageFrom.slice(0,4)} ~ ${coverageTo.slice(0,4)}`;
+    coverageHint = `${coverageFrom.split("T")[0]} ~ ${coverageTo.split("T")[0]}`;
   }
 
   return coverageHint;

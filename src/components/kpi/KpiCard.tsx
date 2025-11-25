@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function KpiCard({ title, value, hint }: { title: string; value: string; hint?: string }) {
   return (
-    <Card className="xl:w-60 lg:w-46">
+    <Card className="xl:w-60 lg:w-full lg:w-min-48">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
       </CardHeader>

@@ -89,7 +89,7 @@ export function validatePeriod(from: string, to: string) {
     throw new Error("Invalid date format");
   }
 
-  if (fromDt > toDt) {
+  if (fromDt >= toDt) {
     throw new Error("Invalid period: Start date must be before end date");
   }
 

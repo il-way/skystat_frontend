@@ -41,17 +41,23 @@ export default function Topbar(props: TopbarProps): JSX.Element {
           <div>
             {/* <Label>From</Label> */}
             <Input
-              type={props.inputType ?? "datetime-local"}
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
+              type={props.inputType ?? "date"}
+              value={from.split("T")[0]}
+              onChange={(e) => props.inputType === undefined 
+                ? setFrom(`${e.target.value}T00:00`) 
+                : setFrom(e.target.value)
+              }
             />
           </div>
           <div>
             {/* <Label>To</Label> */}
             <Input
-              type={props.inputType ?? "datetime-local"}
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
+              type={props.inputType ?? "date"}
+              value={to.split("T")[0]}
+              onChange={(e) => props.inputType === undefined 
+                ? setTo(`${e.target.value}T00:00`) 
+                : setTo(e.target.value)
+              }
             />
           </div>
 

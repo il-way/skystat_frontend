@@ -9,7 +9,7 @@ export function TemperatureKpiGrid({ kpis }: { kpis: TemperaturedKpiValues }) {
     
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <KpiCard title="Sample Size" value={sampleSize.toString()} hint={`METAR (${coverageHint})`} />
+      <KpiCard title="Sample Size" value={sampleSize.toString()} hint={`${coverageHint}`} />
       <KpiCard title="Annual Mean" value={round2(annualMean)!.toString()} hint="temperature [℃]" />
       <KpiCard title="Observed Max" value={annualMax.toString()} hint="temperature [℃]" />
       <KpiCard title="Observed Min" value={annualMin.toString()} hint="temperature [℃]" />

@@ -222,9 +222,7 @@ export default function Dashboard() {
             </li>
             <li>
               <strong>Monthly Observed Days</strong> table: counts per month
-              that meet each preset condition (see column headers such as{" "}
-              <em>WindPeak</em>, <em>Visibility</em>, <em>Ceiling</em>,{" "}
-              <em>Thunderstorm</em>, <em>Snow</em>).
+              that meet each preset condition.
             </li>
             <li>
               Tip: Change the date range to compare seasons/years; all numbers
