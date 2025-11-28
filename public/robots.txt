@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sky-stat.com/sitemap.xml
