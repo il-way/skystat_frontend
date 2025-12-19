@@ -1,9 +1,10 @@
 import type { TopbarProps } from "@/components/topbar/TopbarProps";
-import type { JSX } from "react";
+import { useState, type JSX } from "react";
 import { SidebarTrigger } from "../ui/sidebar";
 import { Search } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import AirportSearchModal from "../modal/AirportSearchModal";
 
 export default function Topbar(props: TopbarProps): JSX.Element {
   const {
@@ -19,6 +20,8 @@ export default function Topbar(props: TopbarProps): JSX.Element {
     rightSlot,
   } = props;
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   return (
     <div className="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="max-w-7xl mx-auto px-4 py-3">
@@ -31,8 +34,9 @@ export default function Topbar(props: TopbarProps): JSX.Element {
               {/* <Label>ICAO</Label> */}
               <Input
                 value={icao}
-                onChange={(e) => setIcao(e.target.value.toUpperCase())}
-                placeholder="e.g., RKSI"
+                readOnly
+                onClick={() => setIsSearchOpen(true)}
+                placeholder="ICAO"
                 className="pl-8 w-full sm:w-28"
               />
             </div>
@@ -43,9 +47,10 @@ export default function Topbar(props: TopbarProps): JSX.Element {
             <Input
               type={props.inputType ?? "date"}
               value={from.split("T")[0]}
-              onChange={(e) => props.inputType === undefined 
-                ? setFrom(`${e.target.value}T00:00`) 
-                : setFrom(e.target.value)
+              onChange={(e) =>
+                props.inputType === undefined
+                  ? setFrom(`${e.target.value}T00:00`)
+                  : setFrom(e.target.value)
               }
             />
           </div>
@@ -54,9 +59,10 @@ export default function Topbar(props: TopbarProps): JSX.Element {
             <Input
               type={props.inputType ?? "date"}
               value={to.split("T")[0]}
-              onChange={(e) => props.inputType === undefined 
-                ? setTo(`${e.target.value}T00:00`) 
-                : setTo(e.target.value)
+              onChange={(e) =>
+                props.inputType === undefined
+                  ? setTo(`${e.target.value}T00:00`)
+                  : setTo(e.target.value)
               }
             />
           </div>
@@ -73,6 +79,13 @@ export default function Topbar(props: TopbarProps): JSX.Element {
               </Button>
             </div>
           </div>
+
+          <AirportSearchModal
+            open={isSearchOpen}
+            onOpenChange={setIsSearchOpen}
+            currentIcao={icao}
+            onSelect={(selectedIcao) => {setIcao(selectedIcao);}}
+          />
         </div>
       </div>
     </div>
