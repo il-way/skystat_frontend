@@ -1,5 +1,6 @@
 export type DatasetCoverage = {
-  coverageFrom: string;
-  coverageTo: string;
+  icao: string;
+  firstReportTime: string;
+  lastReportTime: string;
   totalCount: number;
 }

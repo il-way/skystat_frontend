@@ -76,7 +76,7 @@ export function buildWindRoseURL(params: BasicQueryParams): string {
 }
 
 export function buildMetarInventoryURL(icao: string): string {
-  return `/metar/inventory?icao=${encodeURIComponent(icao)}`;
+  return `/metar/dataset?icao=${encodeURIComponent(icao)}`;
 }
 
 export function buildMonthlyCountSummaryURL(params: MonthlyCountSummaryQueryParams): string {

@@ -25,7 +25,8 @@ import type { MonthlyCountSummaryQueryParams } from "./types/request/statistic/M
 import type { MonthlyCountSummaryResponse } from "./types/response/statistic/MonthlyCountSummaryResponse";
 
 export class MetarStatisticApi {
-  static host = "/api";
+  
+  static host = `${import.meta.env.VITE_API_SERVER_URL}/api`;
 
   static async fetchAverageWindSpeedMonthly(params: BasicQueryParams) {
     const uri =MetarStatisticApi.host + buildWindSpeedAverageMonthlyURL(params);
