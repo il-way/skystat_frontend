@@ -1,6 +1,6 @@
 export type DatasetCoverage = {
   icao: string;
-  firstReportTime: string;
-  lastReportTime: string;
+  from: string;
+  to: string;
   totalCount: number;
 }

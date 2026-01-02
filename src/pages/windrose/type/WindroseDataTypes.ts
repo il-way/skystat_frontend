@@ -5,6 +5,7 @@ export type WindroseDataset = {
   directionBins: string[];
   series: Record<MonthShortName, WindroseSeries[]>;
   maxRate: number;
+  calms: Record<MonthShortName, number>;
 }
 
 export type WindroseSeries = {

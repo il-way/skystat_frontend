@@ -1,8 +1,8 @@
 export type YearlyTemperatureStat = {
   year: number,
-	dailyMeanAvg: number,
-	dailyMaxAvg: number,
-	dailyMinAvg: number,
+	avgDailyMean: number,
+	avgDailyMax: number,
+	avgDailyMin: number,
 	yearlyMax: number,
 	yearlyMin: number,
 };

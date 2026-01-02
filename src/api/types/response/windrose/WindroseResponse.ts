@@ -13,4 +13,8 @@ export type WindroseResponse = {
     frequency: number; // raw count
     rate: number; // percentage (e.g. 3.12)
   }>;
+  calmRates: Array<{
+    month: number; // 1
+    rate: number; // 0.95497
+  }>
 };

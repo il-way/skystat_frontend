@@ -166,7 +166,7 @@ export default function AirportSearchModal(props: AirportSearchModalProps) {
                     <Calendar className="h-3 w-3" /> First Data (UTC)
                   </span>
                   <div className="font-mono text-xs">
-                    {fmtDate(coverage.firstReportTime)}
+                    {fmtDate(coverage.from)}
                   </div>
                 </div>
 
@@ -175,7 +175,7 @@ export default function AirportSearchModal(props: AirportSearchModalProps) {
                     <Calendar className="h-3 w-3" /> Last Data (UTC)
                   </span>
                   <div className="font-mono text-xs">
-                    {fmtDate(coverage.lastReportTime)}
+                    {fmtDate(coverage.to)}
                   </div>
                 </div>
               </div>

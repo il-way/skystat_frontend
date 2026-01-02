@@ -22,8 +22,13 @@ export function buildWindroseDataset(resp?: WindroseResponse) {
     }
   };
 
+  for (const calm of resp.calmRates) {
+    const monthName = monthShortNameFrom(calm.month);
+    base.calms[monthName] = round2(calm.rate) ?? 0;
+  }
+  
   for (const data of resp.data) {
-    const monthName = monthShortNameFrom(data.month);
+    const monthName = monthShortNameFrom(data.month);    
     if (!base.series[monthName]) continue;
     initMonthSeries(monthName);
 
@@ -36,6 +41,7 @@ export function buildWindroseDataset(resp?: WindroseResponse) {
     base.maxRate = Math.max(base.maxRate, series[sbIndex].data[dbIndex]);
   }
 
+  console.log(base);
   return base;
 }
 
@@ -45,17 +51,20 @@ function emptyDataset() {
     directionBins: [],
     series: {} as WindroseDataset["series"],
     maxRate: 0,
+    calms: {} as WindroseDataset["calms"],
   };
-  monthShortNames.forEach((m) => (base.series[m] = []));
+  monthShortNames.forEach((m) => {
+    base.series[m] = [];
+    base.calms[m]=0.0;
+  });
 
   return base;
 }
 
 export function buildEchartOptions(dataset: WindroseDataset, month: number) {
-  const { speedBins, directionBins, series } = dataset;
+  const { speedBins, directionBins, series, calms } = dataset;
   const monthName = monthShortNameFrom(month);
-  const calmRate = series[monthName].find((s) => s.speedBin === "CALM")
-    ?.data.reduce((a, b) => a + b, 0) ?? 0;
+  const calmRate = calms[monthName];
 
   const nonCalmSeries = series[monthName].filter((s) => s.speedBin !== "CALM")
     .map(s => ({

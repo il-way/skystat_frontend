@@ -50,7 +50,7 @@ export function groupYearly(resp?: TemperatureStatisticResponse) {
   if (!resp || years.length === 0) return base;
   return {
     years,
-    annualMean: resp.yearly.reduce((acc, cur) => acc + cur.dailyMeanAvg, 0) / years.length,
+    annualMean: resp.yearly.reduce((acc, cur) => acc + cur.avgDailyMean, 0) / years.length,
     annualMax: Math.max(...resp.yearly.map(y => y.yearlyMax)),
     annualMin: Math.min(...resp.yearly.map(y => y.yearlyMin))
   }
@@ -74,9 +74,9 @@ function monthlySeriesOf(resp: TemperatureStatisticResponse | undefined, year: n
     const r = map.get(b.month);
     return {
       ...b,
-      dailyMeanAvg: r ? round2(r.dailyMeanAvg) : null,
-      dailyMaxAvg: r ? round2(r.dailyMaxAvg) : null,
-      dailyMinAvg: r ? round2(r.dailyMinAvg) : null,
+      dailyMeanAvg: r ? round2(r.avgDailyMean) : null,
+      dailyMaxAvg: r ? round2(r.avgDailyMax) : null,
+      dailyMinAvg: r ? round2(r.avgDailyMin) : null,
     };
   });
 }
@@ -103,9 +103,9 @@ function monthlySeriesTotal(resp?: TemperatureStatisticResponse) {
     if (!arr.length) return b;
     return {
       ...b,
-      dailyMeanAvg: round2(avg(arr.map((x) => x.dailyMeanAvg))),
-      dailyMaxAvg: round2(avg(arr.map((x) => x.dailyMaxAvg))),
-      dailyMinAvg: round2(avg(arr.map((x) => x.dailyMinAvg))),
+      dailyMeanAvg: round2(avg(arr.map((x) => x.avgDailyMean))),
+      dailyMaxAvg: round2(avg(arr.map((x) => x.avgDailyMax))),
+      dailyMinAvg: round2(avg(arr.map((x) => x.avgDailyMin))),
     };
   });
 }
@@ -132,9 +132,9 @@ function monthlyTable(resp: TemperatureStatisticResponse | undefined, mode: { ye
       
       return {
         ...b,
-        mean: round2(r?.dailyMeanAvg),
-        meanMax: round2(r?.dailyMaxAvg),
-        meanMin: round2(r?.dailyMinAvg),
+        mean: round2(r?.avgDailyMean),
+        meanMax: round2(r?.avgDailyMax),
+        meanMin: round2(r?.avgDailyMin),
         monthlyMax: round2(r?.monthlyMax),
         monthlyMin: round2(r?.monthlyMin),
       };
@@ -155,9 +155,9 @@ function monthlyTable(resp: TemperatureStatisticResponse | undefined, mode: { ye
     
     return {
       ...b,
-      mean: round2(avg(arr.map((x) => x.dailyMeanAvg))),
-      meanMax: round2(avg(arr.map((x) => x.dailyMaxAvg))),
-      meanMin: round2(avg(arr.map((x) => x.dailyMinAvg))),
+      mean: round2(avg(arr.map((x) => x.avgDailyMean))),
+      meanMax: round2(avg(arr.map((x) => x.avgDailyMax))),
+      meanMin: round2(avg(arr.map((x) => x.avgDailyMin))),
       monthlyMax: round2(Math.max(...arr.map((x) => x.monthlyMax))),
       monthlyMin: round2(Math.min(...arr.map((x) => x.monthlyMin))),
     }
@@ -170,7 +170,7 @@ function hourlySeriesByYearMonth(resp: TemperatureStatisticResponse | undefined,
   const map = new Map(resp.hourly.filter((h) => h.year === year && h.month === month).map((h) => [h.hour, h]));
   return base.map((b) => {
     const r = map.get(Number(b.hour));
-    return { ...b, mean: r ? round2(r.meanTempAtHour) : null };
+    return { ...b, mean: r ? round2(r.mean) : null };
   });
 }
 
@@ -189,7 +189,7 @@ function hourlySeriesTotal(resp: TemperatureStatisticResponse | undefined, month
   return base.map((b) => {
     const arr = buckets.get(Number(b.hour)) ?? [];
     if (!arr.length) return b;
-    return { ...b, mean: round2(avg(arr.map((x) => x.meanTempAtHour))) };
+    return { ...b, mean: round2(avg(arr.map((x) => x.mean))) };
   });
 }
 
@@ -218,9 +218,9 @@ function hourlyTable(resp: TemperatureStatisticResponse | undefined,
 
       return {
         ...b,
-        mean: round2(r.meanTempAtHour),
-        max: round2(r.maxTempAtHour),
-        min: round2(r.minTempAtHour),
+        mean: round2(r.mean),
+        max: round2(r.max),
+        min: round2(r.min),
       };
     }) as HourlyTableRow[];
   }
@@ -239,9 +239,9 @@ function hourlyTable(resp: TemperatureStatisticResponse | undefined,
     if (!arr.length) return b;
     return {
       ...b,
-      mean: round2(avg(arr.map((x) => x.meanTempAtHour))),
-      max: round2(Math.max(...arr.map((x) => x.maxTempAtHour))),
-      min: round2(Math.min(...arr.map((x) => x.minTempAtHour))),
+      mean: round2(avg(arr.map((x) => x.mean))),
+      max: round2(Math.max(...arr.map((x) => x.max))),
+      min: round2(Math.min(...arr.map((x) => x.min))),
     };
   });  
 }

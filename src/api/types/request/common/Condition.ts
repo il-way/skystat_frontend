@@ -1,2 +1,2 @@
-export type CloudCondition = "type" | "coverage";
-export type WeatherCondition = "phenomena" | "descriptor" | "both";
+export type CloudCondition = "any" | "all";
+export type WeatherCondition = "any" | "all";

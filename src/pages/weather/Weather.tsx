@@ -29,7 +29,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { isWeatherDescriptor, isWeatherPhenomenon } from "./WeatherHelper";
 import { getErrorMessage } from "@/lib/page";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import type { PageTrailStatus } from "@/components/common/types/PageTrailStatus";
@@ -45,7 +44,7 @@ export default function Weather() {
   )[];
   const { icao, from, to, threshold: target, setIcao, setFrom, setTo, setThreshold: setTarget } = usePageScope({ pageId: "weather", defaults: { ...PAGE_DEFAULTS.weather } });
 
-  const [condition, setCondition] = useState<WeatherCondition>("phenomena");
+  const [condition] = useState<WeatherCondition>("any");
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
 
@@ -159,8 +158,6 @@ export default function Weather() {
                 value={target}
                 onValueChange={(v: WeatherDescriptor | WeatherPhenomenon) => {
                   setTarget(v);
-                  if (isWeatherDescriptor(v)) setCondition("descriptor");
-                  else if (isWeatherPhenomenon(v)) setCondition("phenomena");
                 }}
               >
                 <SelectTrigger className="h-8 w-28">
