@@ -26,10 +26,10 @@ import type { MonthlyCountSummaryResponse } from "./types/response/statistic/Mon
 
 export class MetarStatisticApi {
   
-  static host = `${import.meta.env.VITE_API_SERVER_URL}/api`;
+  static basePath = import.meta.env.VITE_API_SERVER_URL ?? "/api";
 
   static async fetchAverageWindSpeedMonthly(params: BasicQueryParams) {
-    const uri =MetarStatisticApi.host + buildWindSpeedAverageMonthlyURL(params);
+    const uri =MetarStatisticApi.basePath + buildWindSpeedAverageMonthlyURL(params);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: "application/json",
@@ -41,7 +41,7 @@ export class MetarStatisticApi {
   static async fetchTemperatureStatistic(
     params: TemperatureStatisticQueryParams
   ) {
-    const uri = MetarStatisticApi.host + buildTemperatureURL(params);
+    const uri = MetarStatisticApi.basePath + buildTemperatureURL(params);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: "application/json",
@@ -51,7 +51,7 @@ export class MetarStatisticApi {
   }
 
   static async fetchThresholdStatistic(params: ThresholdStatisticQueryParams) {
-    const uri = MetarStatisticApi.host + buildThresholdURL(params);
+    const uri = MetarStatisticApi.basePath + buildThresholdURL(params);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: "application/json",
@@ -61,7 +61,7 @@ export class MetarStatisticApi {
   }
 
   static async fetchCloudStatistic(params: CloudStatisticQueryParams) {
-    const uri = MetarStatisticApi.host + buildCloudURL(params);
+    const uri = MetarStatisticApi.basePath + buildCloudURL(params);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: "application/json",
@@ -71,7 +71,7 @@ export class MetarStatisticApi {
   }
 
   static async fetchWeatherStatistic(params: WeatherStatisticQueryParams) {
-    const uri = MetarStatisticApi.host + buildWeatherURL(params);
+    const uri = MetarStatisticApi.basePath + buildWeatherURL(params);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: "application/json",
@@ -81,7 +81,7 @@ export class MetarStatisticApi {
   }
 
   static async fetchWindRoseStatistic(params: WindRoseQueryParams) {
-    const uri = MetarStatisticApi.host + buildWindRoseURL(params);
+    const uri = MetarStatisticApi.basePath + buildWindRoseURL(params);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: "application/json",
@@ -92,7 +92,7 @@ export class MetarStatisticApi {
 
   static async fetchAverageSummary(params: BasicQueryParams) {
     const path = buildAverageSummaryURL(params);
-    const uri = `${this.host}${path}`;
+    const uri = `${this.basePath}${path}`;
     const res = await fetch(uri, {
       headers: {
         Accept: "application/json",
@@ -103,7 +103,7 @@ export class MetarStatisticApi {
 
   static async fetchMonthlyCountSummary(params: MonthlyCountSummaryQueryParams) {
     const path = buildMonthlyCountSummaryURL(params);
-    const uri = `${this.host}${path}`;
+    const uri = `${this.basePath}${path}`;
     const res = await fetch(uri, {
       headers: {
         Accept: "application/json",

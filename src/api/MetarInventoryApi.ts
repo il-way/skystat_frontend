@@ -3,10 +3,10 @@ import type { DatasetCoverage } from "@/api/types/response/common/DatasetCoverag
 
 export class MetarInventoryApi {
 
-  static host = `${import.meta.env.VITE_API_SERVER_URL}/api`;
+  static basePath = import.meta.env.VITE_API_SERVER_URL ?? "/api";
 
   static async fetchDataCoverage(icao: string) {
-    const uri = MetarInventoryApi.host + buildMetarInventoryURL(icao);
+    const uri = MetarInventoryApi.basePath + buildMetarInventoryURL(icao);
     const res = await fetch(uri.toString(), {
       headers: {
         Accept: 'application/json',
