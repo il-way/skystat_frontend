@@ -71,3 +71,7 @@ export default defineConfig([
   },
 ])
 ```
+
+## Deployment note
+- SPA fallback required: direct routes (for example /report/RKSI) must return index.html.
+

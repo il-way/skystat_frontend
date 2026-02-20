@@ -1,0 +1,3 @@
+# ads.txt placeholder for SkyStat
+# After AdSense approval, replace the line below with the official entry from your AdSense account.
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

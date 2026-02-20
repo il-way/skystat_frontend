@@ -11,17 +11,26 @@ node_modules
 dist
 dist-ssr
 *.local
+.vite
+.cache
+coverage
+.eslintcache
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example
+!.env.sample
 
 stats.html

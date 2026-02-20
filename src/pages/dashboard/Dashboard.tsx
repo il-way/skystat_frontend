@@ -3,13 +3,13 @@ import WindLineChart from "@/pages/dashboard/components/WindLineChart";
 import { DashboardKpiCardGrid } from "@/pages/dashboard/components/DashboardKpiGrid";
 import DashboardTable from "@/pages/dashboard/components/DashboardTable";
 import Topbar from "@/components/topbar/Topbar";
-import { Separator } from "@/components/ui/separator";
 import { monthShortNameFrom, monthShortNames, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import type { DashboardKpiValues } from "@/pages/dashboard/types/DashboardKpiValues";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import type { WindLineData } from "./types/WindLineData";
 import { round2 } from "@/lib/math";
 import { getErrorMessage } from "@/lib/page";
@@ -170,6 +170,32 @@ export default function Dashboard() {
         {/* Breadcrumb / Context */}
         <PageTrailstatusBar page="Dashboard" status={status} />
 
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h2 className="text-base font-medium text-foreground">대시보드 안내</h2>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/guide"
+                className="inline-flex rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                가이드 보기
+              </Link>
+              <Link
+                to="/report/RKSI?from=2023-01-01&to=2024-01-01"
+                className="inline-flex rounded-full border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                샘플 리포트
+              </Link>
+            </div>
+          </div>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground">
+            <li>ICAO와 UTC 기간(From 포함, To 미포함)을 설정한 뒤 Search를 누르세요.</li>
+            <li>상단 카드: 표본수/평균 시정/평균 운고/평균 풍속을 요약합니다.</li>
+            <li>차트: 선택 기간의 연월 평균 추세를 보여줍니다.</li>
+            <li>테이블: 임계값 조건을 만족한 월별 일수를 집계합니다.</li>
+          </ul>
+        </section>
+
         <SimpleAlertModal
           open={errOpen}
           onOpenChange={setErrOpen}
@@ -197,39 +223,6 @@ export default function Dashboard() {
         <LoadingWrapper loading={loading || tableIsFetching}>
           <DashboardTable rows={tableRows || emptyDashboardTableRows()} />
         </LoadingWrapper>
-
-        <Separator />
-
-        {/* Next steps */}
-        <div className="text-sm text-muted-foreground leading-6">
-          <div className="font-medium text-foreground mb-1">
-            Quick Guide — Dashboard
-          </div>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>
-              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
-              inclusive, To exclusive). Click <strong>Search</strong>.
-            </li>
-            <li>
-              Top cards show <strong>Sample Size</strong>,{" "}
-              <strong>Avg Visibility (m)</strong>,{" "}
-              <strong>Avg Ceiling (ft)</strong>, and{" "}
-              <strong>Avg WindSpeed (kt)</strong> for the selected range.
-            </li>
-            <li>
-              <strong>Mean Wind Speed Over Time</strong>: monthly line chart of
-              mean wind speed across the period.
-            </li>
-            <li>
-              <strong>Monthly Observed Days</strong> table: counts per month
-              that meet each preset condition.
-            </li>
-            <li>
-              Tip: Change the date range to compare seasons/years; all numbers
-              reflect your selected range.
-            </li>
-          </ul>
-        </div>
       </main>
     </>
   );
