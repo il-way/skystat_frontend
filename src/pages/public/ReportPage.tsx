@@ -12,8 +12,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import PageContainer from "../../components/layout/PageContainer";
+import AdSlot from "../../components/ads/AdSlot";
 import { getReportMock } from "../../lib/reportMock";
 import type { ReportMock } from "../../lib/reportMock";
 import { useSeo } from "../../lib/seo";
@@ -25,14 +27,21 @@ import {
 } from "../../api/metarSummayApi";
 import { fetchMonthlyAverage } from "../../api/metarTrendApi";
 
-function buildFallbackReport(icao: string): ReportMock {
+function buildFallbackReport(
+  icao: string,
+  fallback: {
+    airportName: string;
+    region: string;
+    summary: string;
+    disclaimer: string;
+  }
+): ReportMock {
   return {
     icao,
-    airportName: "샘플 공항",
-    region: "공개 예시 데이터",
+    airportName: fallback.airportName,
+    region: fallback.region,
     period: "2023-01-01 ~ 2024-01-01",
-    summary:
-      "요청한 ICAO의 사전 정의 데이터가 없어 기본 예시 값으로 보고서를 표시합니다.",
+    summary: fallback.summary,
     sampleCount: 0,
     avgVisibilityKm: 0,
     avgCeilingFt: 0,
@@ -69,8 +78,7 @@ function buildFallbackReport(icao: string): ReportMock {
       { month: "2023-11", days: 0 },
       { month: "2023-12", days: 0 },
     ],
-    disclaimer:
-      "표시된 수치는 예시 데이터이며 실제 운항 의사결정에 사용될 수 없습니다. 공식 기상 정보와 운항 지침을 확인하세요.",
+    disclaimer: fallback.disclaimer,
   };
 }
 
@@ -235,6 +243,7 @@ function formatTrendTick(label: string, count: number) {
 }
 
 export default function ReportPage() {
+  const { t, i18n } = useTranslation();
   const params = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -274,7 +283,13 @@ export default function ReportPage() {
   }, []);
 
   const prepared = getReportMock(icao);
-  const report = prepared ?? buildFallbackReport(icao);
+  const report = prepared
+    ?? buildFallbackReport(icao, {
+      airportName: t("reportPage.fallback.airportName"),
+      region: t("reportPage.fallback.region"),
+      summary: t("reportPage.fallback.summary"),
+      disclaimer: t("reportPage.fallback.disclaimer"),
+    });
 
   // ✅ 실데이터 쿼리 1) KPI
   const avgQuery = useQuery({
@@ -401,15 +416,15 @@ export default function ReportPage() {
   const summaryAvgWindSpeedKt = avg?.avgWindSpeedKt ?? null;
 
   const kpiItems = [
-    { label: "표본수", value: `${sampleCount.toLocaleString()} 건` },
-    { label: "평균시정", value: `${avgVisibilityKm.toFixed(1)} km` },
-    { label: "평균운고", value: `${Math.round(avgCeilingFt).toLocaleString()} ft` },
-    { label: "평균풍속", value: `${avgWindSpeedKt.toFixed(1)} kt` },
+    { label: t("reportPage.kpi.sampleSize"), value: `${sampleCount.toLocaleString()} ${t("units.records")}` },
+    { label: t("reportPage.kpi.avgVisibility"), value: `${avgVisibilityKm.toFixed(1)} km` },
+    { label: t("reportPage.kpi.avgCeiling"), value: `${Math.round(avgCeilingFt).toLocaleString()} ft` },
+    { label: t("reportPage.kpi.avgWind"), value: `${avgWindSpeedKt.toFixed(1)} kt` },
   ];
 
   useSeo({
-    title: `${icao} 보고서`,
-    description: `${icao} 공항의 공개 기상 통계 분석 보고서 페이지입니다.`,
+    title: t("reportPage.seo.title", { icao }),
+    description: t("reportPage.seo.description", { icao }),
   });
 
   const coverageFromDate = avg?.coverageFrom ? avg.coverageFrom.slice(0, 10) : null;
@@ -424,15 +439,30 @@ export default function ReportPage() {
   const summaryWindText = summaryAvgWindSpeedKt == null ? "-" : `${summaryAvgWindSpeedKt.toFixed(1)} kt`;
   const peakSummaryText =
     hasAnyMonthlyEvent && visibilityPeak && windPeak
-      ? ` 저시정(≤${OBS.visibility}m)은 ${visibilityPeak.month}에 ${visibilityPeak.days}일로 최다, 강풍(피크≥${OBS.windPeak}kt)은 ${windPeak.month}에 ${windPeak.days}일로 최다입니다.`
+      ? ` ${t("reportPage.summary.peak", {
+          visibility: OBS.visibility,
+          visMonth: visibilityPeak.month,
+          visDays: visibilityPeak.days,
+          wind: OBS.windPeak,
+          windMonth: windPeak.month,
+          windDays: windPeak.days,
+        })}`
       : "";
   const coverageSummaryText =
     coverageFromDate && coverageToDate
-      ? ` 데이터 커버리지는 ${coverageFromDate}~${coverageToDate}입니다.`
+      ? ` ${t("reportPage.summary.coverage", {
+          from: coverageFromDate,
+          to: coverageToDate,
+        })}`
       : "";
-  const autoSummaryText = `선택 기간(포함) 기준, 평균 시정은 ${summaryVisibilityText}, 평균 풍속은 ${summaryWindText}입니다.${peakSummaryText}${coverageSummaryText}`;
+  const autoSummaryText = `${t("reportPage.summary.base", {
+    visibility: summaryVisibilityText,
+    wind: summaryWindText,
+  })}${peakSummaryText}${coverageSummaryText}`;
   const periodInvalid = Boolean(fromDate && toDate && fromDate >= toDate);
   const canApply = Boolean(fromDate && toDate && !periodInvalid);
+  const isKo = (i18n.resolvedLanguage || i18n.language || "ko").startsWith("ko");
+  const disclaimerText = isKo ? report.disclaimer : t("reportPage.disclaimer.body");
   const generatedWindSeries: ChartPoint[] = windTrendMonthly.length
     ? toTrendChartSeries(windTrendMonthly)
     : report.windSeries;
@@ -484,9 +514,9 @@ export default function ReportPage() {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      showToast("링크가 복사되었습니다.");
+      showToast(t("reportPage.toast.copySuccess"));
     } catch {
-      showToast("복사에 실패했습니다. 주소를 직접 복사해주세요.");
+      showToast(t("reportPage.toast.copyFail"));
     }
   };
 
@@ -511,44 +541,45 @@ export default function ReportPage() {
   };
 
   return (
-    <PageContainer className="space-y-10">
+    <div className="notranslate" translate="no">
+      <PageContainer className="space-y-10">
       <header className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm sm:p-8">
         <nav className="flex items-center gap-2 text-sm text-slate-500">
           <Link to="/" className="hover:text-slate-700">
-            홈
+            {t("actions.home")}
           </Link>
           <span>/</span>
-          <span>리포트</span>
+          <span>{t("reportPage.breadcrumb.report")}</span>
           <span>/</span>
           <span className="font-semibold text-slate-700">{icao}</span>
         </nav>
 
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          공항별 기상 통계 분석 보고서
+          {t("reportPage.header.title")}
         </h1>
         <p className="mt-3 text-sm text-slate-600">
-          ICAO: <span className="font-semibold text-slate-800">{icao}</span>
+          {t("reportPage.header.icaoLabel")}: <span className="font-semibold text-slate-800">{icao}</span>
           <span className="mx-2">|</span>
-          기간(포함): <span className="font-semibold text-slate-800">{periodText}</span>
+          {t("reportPage.header.periodInclusive")}: <span className="font-semibold text-slate-800">{periodText}</span>
           <button
             type="button"
             onClick={() => setIsPeriodOpen((prev) => !prev)}
             className="ml-3 rounded-xl border border-slate-300 bg-white px-2.5 py-1 text-sm text-slate-700 transition hover:bg-slate-50"
           >
-            기간 변경
+            {t("reportPage.header.periodToggle")}
           </button>
           <button
             type="button"
             onClick={handleCopyLink}
             className="ml-2 rounded-xl border border-slate-300 bg-white px-2.5 py-1 text-sm text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300"
           >
-            링크 복사
+            {t("reportPage.header.copyLink")}
           </button>
         </p>
 
         {coverageText && (
           <p className="mt-1 text-sm text-slate-600">
-            데이터 커버리지(포함):{" "}
+            {t("reportPage.header.coverageInclusive")}:{" "}
             <span className="font-semibold text-slate-800">{coverageText}</span>
           </p>
         )}
@@ -566,7 +597,7 @@ export default function ReportPage() {
                   selectedPreset === "1y" ? "bg-slate-900 text-white" : "bg-white text-slate-700 border border-slate-200"
                 }`}
               >
-                최근 1년
+                {t("reportPage.header.presets.recent1y")}
               </button>
               <button
                 type="button"
@@ -575,7 +606,7 @@ export default function ReportPage() {
                   selectedPreset === "3y" ? "bg-slate-900 text-white" : "bg-white text-slate-700 border border-slate-200"
                 }`}
               >
-                최근 3년
+                {t("reportPage.header.presets.recent3y")}
               </button>
               <button
                 type="button"
@@ -584,7 +615,7 @@ export default function ReportPage() {
                   selectedPreset === "5y" ? "bg-slate-900 text-white" : "bg-white text-slate-700 border border-slate-200"
                 }`}
               >
-                최근 5년
+                {t("reportPage.header.presets.recent5y")}
               </button>
               <button
                 type="button"
@@ -593,19 +624,19 @@ export default function ReportPage() {
                   selectedPreset === "all" ? "bg-slate-900 text-white" : "bg-white text-slate-700 border border-slate-200"
                 }`}
               >
-                전체
+                {t("reportPage.header.presets.all")}
               </button>
               <button
                 type="button"
                 onClick={handleResetPeriod}
                 className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm text-slate-700 transition hover:bg-slate-50"
               >
-                Reset
+                {t("reportPage.header.presets.reset")}
               </button>
             </div>
             <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
               <label className="grid gap-1 text-sm text-slate-700">
-                <span className="text-xs text-slate-500">From</span>
+                <span className="text-xs text-slate-500">{t("reportPage.header.from")}</span>
                 <input
                   type="date"
                   value={fromDate}
@@ -618,8 +649,8 @@ export default function ReportPage() {
               </label>
               <label className="grid gap-1 text-sm text-slate-700">
                 <span className="flex items-center gap-1 text-xs text-slate-500">
-                  To
-                  <span title="종료일(To)은 포함되지 않으며, 실제 조회는 To 이전까지 집계됩니다.">
+                  {t("reportPage.header.to")}
+                  <span title={t("reportPage.header.toHint")}>
                     <Info className="h-3.5 w-3.5 text-slate-400 transition-colors hover:text-slate-600" />
                   </span>
                 </span>
@@ -638,11 +669,11 @@ export default function ReportPage() {
                 disabled={!canApply}
                 className="h-10 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
-                적용
+                {t("reportPage.header.apply")}
               </button>
             </div>
             {periodInvalid && (
-              <p className="mt-2 text-xs text-amber-700">기간을 다시 확인해주세요</p>
+              <p className="mt-2 text-xs text-amber-700">{t("reportPage.header.invalidPeriod")}</p>
             )}
           </form>
         )}
@@ -650,18 +681,18 @@ export default function ReportPage() {
         <p className="mt-4 max-w-4xl text-sm leading-relaxed text-slate-700">{autoSummaryText}</p>
 
         {(avgQuery.isLoading || monthlyQuery.isLoading) && (
-          <p className="mt-4 text-sm text-slate-500">실데이터를 불러오는 중...</p>
+          <p className="mt-4 text-sm text-slate-500">{t("reportPage.header.loading")}</p>
         )}
 
         {(avgQuery.isError || monthlyQuery.isError) && (
           <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            실데이터 조회에 실패해 예시 데이터로 표시될 수 있습니다.
+            {t("reportPage.header.loadError")}
           </p>
         )}
       </header>
 
       <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-700">관측 현황</h2>
+        <h2 className="text-sm font-semibold text-slate-700">{t("reportPage.kpi.sectionTitle")}</h2>
         <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {kpiItems.map((kpi) => (
             <article
@@ -678,8 +709,8 @@ export default function ReportPage() {
       {/* 차트: 실데이터 우선, 로딩/에러 시 mock fallback */}
       <section className="grid grid-cols-1 gap-4">
         <article className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">평균 풍속 시계열</h2>
-          <p className="mt-1 text-sm text-slate-500">Monthly Average (selected period)</p>
+          <h2 className="text-lg font-semibold text-slate-900">{t("reportPage.chart.windTitle")}</h2>
+          <p className="mt-1 text-sm text-slate-500">{t("reportPage.chart.subtitle")}</p>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={generatedWindSeries}>
@@ -700,7 +731,7 @@ export default function ReportPage() {
                 <YAxis tick={{ fontSize: 12, fill: "#64748b" }} />
                 <Tooltip
                   labelFormatter={(label) => String(label)}
-                  formatter={(value) => [`${Number(value).toFixed(1)} kt`, "풍속"]}
+                  formatter={(value) => [`${Number(value).toFixed(1)} kt`, t("reportPage.chart.windSeries")]}
                 />
                 <Area
                   type="monotone"
@@ -716,8 +747,8 @@ export default function ReportPage() {
         </article>
 
         <article className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">평균 시정 시계열</h2>
-          <p className="mt-1 text-sm text-slate-500">Monthly Average (selected period)</p>
+          <h2 className="text-lg font-semibold text-slate-900">{t("reportPage.chart.visibilityTitle")}</h2>
+          <p className="mt-1 text-sm text-slate-500">{t("reportPage.chart.subtitle")}</p>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={generatedVisSeries}>
@@ -738,7 +769,7 @@ export default function ReportPage() {
                 <YAxis tick={{ fontSize: 12, fill: "#64748b" }} />
                 <Tooltip
                   labelFormatter={(label) => String(label)}
-                  formatter={(value) => [`${Number(value).toFixed(1)} km`, "시정"]}
+                  formatter={(value) => [`${Number(value).toFixed(1)} km`, t("reportPage.chart.visibilitySeries")]}
                 />
                 <Area
                   type="monotone"
@@ -754,34 +785,34 @@ export default function ReportPage() {
         </article>
       </section>
       <p className="mt-3 text-sm text-slate-500">
-        참고: 월별 평균은 ‘평시 상태’를 요약합니다. 운항 영향은 아래 ‘임계값 초과 일수’ 지표가 더 직접적입니다.
+        {t("reportPage.chart.note")}
       </p>
 
       {/* ✅ 실데이터 테이블 */}
       <section className="rounded-3xl border border-slate-200 bg-white/80 p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-900">월별 관측 일수</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{t("reportPage.monthly.title")}</h2>
         <p className="mt-1 text-sm tracking-tight text-slate-600">
-          집계 조건:
+          {t("reportPage.monthly.conditionsLabel")}:
           <span className="ml-1">
-            강풍(피크) ≥ <span className="font-medium text-slate-700">{OBS.windPeak} kt</span>
+            {t("reportPage.monthly.strongWind")} ≥ <span className="font-medium text-slate-700">{OBS.windPeak} kt</span>
           </span>
           <span className="mx-2 text-slate-400">·</span>
           <span>
-            저시정 ≤ <span className="font-medium text-slate-700">{OBS.visibility} m</span>
+            {t("reportPage.monthly.lowVisibility")} ≤ <span className="font-medium text-slate-700">{OBS.visibility} m</span>
           </span>
           <span className="mx-2 text-slate-400">·</span>
           <span>
-            저운고 ≤ <span className="font-medium text-slate-700">{OBS.ceiling} ft</span>
+            {t("reportPage.monthly.lowCeiling")} ≤ <span className="font-medium text-slate-700">{OBS.ceiling} ft</span>
           </span>
           <span className="mx-2 text-slate-400">·</span>
           <span>
             {OBS.phenomenon}
-            <span className="text-slate-500">(뇌전)</span>
+            <span className="text-slate-500">({t("reportPage.monthly.thunderstormShort")})</span>
           </span>
           <span className="mx-2 text-slate-400">·</span>
           <span>
             {OBS.descriptor}
-            <span className="text-slate-500">(눈)</span>
+            <span className="text-slate-500">({t("reportPage.monthly.snowShort")})</span>
           </span>
         </p>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
@@ -793,7 +824,7 @@ export default function ReportPage() {
                 monthlyView === "recent12" ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-700"
               }`}
             >
-              최근 12개월
+              {t("reportPage.monthly.recent12")}
             </button>
             <button
               type="button"
@@ -802,29 +833,40 @@ export default function ReportPage() {
                 monthlyView === "all" ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-700"
               }`}
             >
-              전체
+              {t("reportPage.monthly.all")}
             </button>
           </div>
           <p className="text-sm text-slate-500">
             {monthlyView === "recent12"
-              ? `표시: 최근 12개월(${displayedMonthly.length}/${sortedMonthly.length})`
-              : `표시: 전체(${displayedMonthly.length})`}
+              ? t("reportPage.monthly.displayRecent", {
+                  shown: displayedMonthly.length,
+                  total: sortedMonthly.length,
+                })
+              : t("reportPage.monthly.displayAll", { shown: displayedMonthly.length })}
           </p>
         </div>
         {hasAnyMonthlyEvent && visibilityPeak && windPeak && (
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-700">
-              저시정(≤{OBS.visibility}m) 최다: {visibilityPeak.month} · {visibilityPeak.days}일
+              {t("reportPage.monthly.peakVisibility", {
+                threshold: OBS.visibility,
+                month: visibilityPeak.month,
+                days: visibilityPeak.days,
+              })}
             </span>
             <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-700">
-              강풍(피크≥{OBS.windPeak}kt) 최다: {windPeak.month} · {windPeak.days}일
+              {t("reportPage.monthly.peakWind", {
+                threshold: OBS.windPeak,
+                month: windPeak.month,
+                days: windPeak.days,
+              })}
             </span>
           </div>
         )}
         {!hasAnyMonthlyEvent && (
           <div className="mt-3">
             <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600">
-              해당 조건에서 이벤트가 없습니다
+              {t("reportPage.monthly.noEvent")}
             </span>
           </div>
         )}
@@ -839,10 +881,10 @@ export default function ReportPage() {
                     onClick={() => handleMonthlySort("month")}
                     className="inline-flex items-center gap-1 text-sm text-slate-700"
                   >
-                    <span>Month</span>
+                    <span>{t("reportPage.monthly.headers.month")}</span>
                     {renderSortIcon("month")}
                   </button>
-                  <span className="block text-xs text-slate-500">(YYYY-MM)</span>
+                  <span className="block text-xs text-slate-500">{t("reportPage.monthly.headers.monthSub")}</span>
                 </th>
                 <th className="px-3 py-2 text-center font-semibold">
                   <button
@@ -851,10 +893,12 @@ export default function ReportPage() {
                     className="mx-auto flex items-center justify-center gap-1 text-sm text-slate-700"
                   >
                     <Wind className="h-3.5 w-3.5 text-slate-400" />
-                    <span>WindPeak</span>
+                    <span>{t("reportPage.monthly.headers.windPeak")}</span>
                     {renderSortIcon("windPeak")}
                   </button>
-                  <span className="block text-xs text-slate-500">(≥ {OBS.windPeak} kt)</span>
+                  <span className="block text-xs text-slate-500">
+                    {t("reportPage.monthly.headers.windPeakSub", { value: OBS.windPeak })}
+                  </span>
                 </th>
                 <th className="px-3 py-2 text-center font-semibold">
                   <button
@@ -863,10 +907,12 @@ export default function ReportPage() {
                     className="mx-auto flex items-center justify-center gap-1 text-sm text-slate-700"
                   >
                     <Eye className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Visibility</span>
+                    <span>{t("reportPage.monthly.headers.visibility")}</span>
                     {renderSortIcon("visibility")}
                   </button>
-                  <span className="block text-xs text-slate-500">(≤ {OBS.visibility} m)</span>
+                  <span className="block text-xs text-slate-500">
+                    {t("reportPage.monthly.headers.visibilitySub", { value: OBS.visibility })}
+                  </span>
                 </th>
                 <th className="px-3 py-2 text-center font-semibold">
                   <button
@@ -875,10 +921,12 @@ export default function ReportPage() {
                     className="mx-auto flex items-center justify-center gap-1 text-sm text-slate-700"
                   >
                     <Cloud className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Ceiling</span>
+                    <span>{t("reportPage.monthly.headers.ceiling")}</span>
                     {renderSortIcon("ceiling")}
                   </button>
-                  <span className="block text-xs text-slate-500">(≤ {OBS.ceiling} ft)</span>
+                  <span className="block text-xs text-slate-500">
+                    {t("reportPage.monthly.headers.ceilingSub", { value: OBS.ceiling })}
+                  </span>
                 </th>
                 <th className="px-3 py-2 text-center font-semibold">
                   <button
@@ -887,7 +935,7 @@ export default function ReportPage() {
                     className="mx-auto flex items-center justify-center gap-1 text-sm text-slate-700"
                   >
                     <Zap className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Thunderstorm</span>
+                    <span>{t("reportPage.monthly.headers.thunderstorm")}</span>
                     {renderSortIcon("ts")}
                   </button>
                   <span className="block text-xs text-slate-500">({OBS.phenomenon})</span>
@@ -899,7 +947,7 @@ export default function ReportPage() {
                     className="mx-auto flex items-center justify-center gap-1 text-sm text-slate-700"
                   >
                     <Snowflake className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Snow</span>
+                    <span>{t("reportPage.monthly.headers.snow")}</span>
                     {renderSortIcon("sn")}
                   </button>
                   <span className="block text-xs text-slate-500">({OBS.descriptor})</span>
@@ -923,7 +971,7 @@ export default function ReportPage() {
               {!sortedDisplayedMonthly.length && (
                 <tr className="text-slate-700">
                   <td className="px-3 py-6" colSpan={6}>
-                    데이터가 없습니다.
+                    {t("reportPage.monthly.noData")}
                   </td>
                 </tr>
               )}
@@ -932,10 +980,12 @@ export default function ReportPage() {
         </div>
       </section>
 
+      <AdSlot slotKey="report_main" minHeight={300} />
+
       <section className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-        <h2 className="text-lg font-semibold text-amber-900">면책 안내</h2>
+        <h2 className="text-lg font-semibold text-amber-900">{t("reportPage.disclaimer.title")}</h2>
         <p className="mt-2 text-sm leading-relaxed text-amber-900/90">
-          {report.disclaimer}
+          {disclaimerText}
         </p>
       </section>
 
@@ -948,6 +998,7 @@ export default function ReportPage() {
           {toastMessage}
         </div>
       )}
-    </PageContainer>
+      </PageContainer>
+    </div>
   );
 }

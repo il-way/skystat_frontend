@@ -1,3 +1,4 @@
-# ads.txt placeholder for SkyStat
-# After AdSense approval, replace the line below with the official entry from your AdSense account.
-# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+# SkyStat ads.txt template
+# 배포 직전 아래 1줄의 REPLACE_WITH_REAL_PUBLISHER_ID 부분만 실제 pub ID로 교체하세요.
+# 예: google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
+google.com, pub-REPLACE_WITH_REAL_PUBLISHER_ID, DIRECT, f08c47fec0942fa0

@@ -82,7 +82,10 @@ function AppShell() {
 
 function AppLayout() {
   return (
-    <div className="flex h-screen w-full bg-background text-foreground">
+    <div
+      className="notranslate flex h-screen w-full bg-background text-foreground"
+      translate="no"
+    >
       <SidebarNav />
       <div className="flex-1 flex flex-col">
         <Outlet />

@@ -5,6 +5,18 @@
   <meta charset="UTF-8" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("i18nextLng");
+        var detected = (stored || navigator.language || "en").split("-")[0];
+        var supported = { ko: true, en: true, ja: true };
+        document.documentElement.lang = supported[detected] ? detected : "en";
+      } catch (_) {
+        document.documentElement.lang = "en";
+      }
+    })();
+  </script>
   <title>SkyStat | Aviation Weather Analytics</title>
   <meta property="og:site_name" content="SkyStat" />
   <link rel="canonical" href="https://sky-stat.com" />
@@ -13,6 +25,8 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
   <meta name="robots" content="index, follow" />
+  <!-- Optional safety: disable browser auto-translation to avoid DOM mutation conflicts in SPA charts -->
+  <meta name="google" content="notranslate" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#09090b" />
 
@@ -37,6 +51,86 @@
   <meta name="twitter:description"
     content="Unlock insights from historical weather data. Streamline your meteorological analysis with SkyStat's comprehensive airport statistics." />
   <meta name="twitter:image" content="https://sky-stat.com/og-image.jpg" />
+
+  <!-- Consent Mode v2 default: deny ad/analytics until user choice -->
+  <script>
+    (function () {
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+
+      window.gtag("consent", "default", {
+        ad_storage: "denied",
+        analytics_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        functionality_storage: "granted",
+        security_storage: "granted",
+        wait_for_update: 500
+      });
+    })();
+  </script>
+
+  <!-- AdSense/CMP 공통 퍼블리셔 ID 정규화 (Vite env 기반) -->
+  <script>
+    (function () {
+      function sanitizeEnv(value) {
+        if (!value) return "";
+        if (value.startsWith("%VITE_") && value.endsWith("%")) {
+          return "";
+        }
+        return value.trim();
+      }
+
+      var raw = sanitizeEnv("%VITE_ADSENSE_PUBLISHER_ID%");
+      var publisherId = "";
+      var adsenseClient = "";
+
+      if (/^pub-\d+$/.test(raw)) {
+        publisherId = raw;
+        adsenseClient = "ca-" + raw;
+      } else if (/^ca-pub-\d+$/.test(raw)) {
+        adsenseClient = raw;
+        publisherId = raw.replace(/^ca-/, "");
+      }
+
+      window.__SKYSTAT_ADSENSE_CONFIG = {
+        publisherId: publisherId,
+        adsenseClient: adsenseClient
+      };
+    })();
+  </script>
+
+  <!-- AdSense script slot (활성 조건: 유효한 VITE_ADSENSE_PUBLISHER_ID 존재) -->
+  <script>
+    (function () {
+      var cfg = window.__SKYSTAT_ADSENSE_CONFIG || {};
+      var client = String(cfg.adsenseClient || "");
+      if (!/^ca-pub-\d+$/.test(client)) {
+        return;
+      }
+      if (document.getElementById("skystat-adsense-js")) {
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.id = "skystat-adsense-js";
+      script.async = true;
+      script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" + encodeURIComponent(client);
+      script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+    })();
+  </script>
+
+  <!-- Google-certified CMP integration config (Funding Choices) -->
+  <script>
+    window.__SKYSTAT_CMP_CONFIG = {
+      provider: "google-funding-choices",
+      enabled: true,
+      // Build-time injected from Vite env (set VITE_ADSENSE_PUBLISHER_ID in .env)
+      // Example: pub-1234567890123456
+      publisherId: (window.__SKYSTAT_ADSENSE_CONFIG || {}).publisherId || ""
+    };
+  </script>
 
   <script type="application/ld+json">
   {
@@ -73,6 +167,307 @@
 
 <body>
   <div id="root"></div>
+  <script>
+    (function () {
+      var CONSENT_KEY = "skystat_consent_v1";
+      var OPEN_KEY = "skystat_consent_open";
+      var CMP_CONFIG = window.__SKYSTAT_CMP_CONFIG || {};
+
+      function safeParse(json) {
+        try {
+          return JSON.parse(json);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function safeGet(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function safeSet(key, value) {
+        try {
+          window.localStorage.setItem(key, value);
+        } catch (_) { }
+      }
+
+      function removeManageButton() {
+        var node = document.getElementById("skystat-consent-open");
+        if (node && node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      }
+
+      function isGoogleFundingChoicesEnabled() {
+        if (!CMP_CONFIG || CMP_CONFIG.enabled !== true) {
+          return false;
+        }
+        if (CMP_CONFIG.provider !== "google-funding-choices") {
+          return false;
+        }
+        return /^pub-\d+$/.test(String(CMP_CONFIG.publisherId || ""));
+      }
+
+      function loadGoogleFundingChoices() {
+        var pubId = String(CMP_CONFIG.publisherId || "");
+        if (!pubId) return;
+        if (document.getElementById("skystat-fc-script")) return;
+
+        var script = document.createElement("script");
+        script.id = "skystat-fc-script";
+        script.async = true;
+        script.src = "https://fundingchoicesmessages.google.com/i/" + pubId + "?ers=1";
+        document.head.appendChild(script);
+
+        (function signalGooglefcPresent() {
+          if (window.frames["googlefcPresent"]) {
+            return;
+          }
+          if (!document.body) {
+            setTimeout(signalGooglefcPresent, 0);
+            return;
+          }
+          var iframe = document.createElement("iframe");
+          iframe.style.cssText =
+            "width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;display:none;";
+          iframe.name = "googlefcPresent";
+          document.body.appendChild(iframe);
+        })();
+      }
+
+      function currentLang() {
+        return (document.documentElement.lang || "en").split("-")[0];
+      }
+
+      function textSet(lang) {
+        var ko = {
+          title: "쿠키 및 광고 동의",
+          body: "SkyStat는 서비스 품질 측정과 광고 제공을 위해 쿠키를 사용할 수 있습니다. 선택 내용을 언제든 변경할 수 있습니다.",
+          accept: "모두 동의",
+          reject: "필수만 허용",
+          manage: "동의 설정"
+        };
+        var ja = {
+          title: "Cookie / 広告同意",
+          body: "SkyStat はサービス品質計測と広告配信のため Cookie を使用する場合があります。設定はいつでも変更できます。",
+          accept: "すべて同意",
+          reject: "必須のみ",
+          manage: "同意設定"
+        };
+        var en = {
+          title: "Cookie and Ads Consent",
+          body: "SkyStat may use cookies for service measurement and ad delivery. You can change your choice anytime.",
+          accept: "Accept all",
+          reject: "Reject non-essential",
+          manage: "Consent settings"
+        };
+        if (lang === "ko") return ko;
+        if (lang === "ja") return ja;
+        return en;
+      }
+
+      function applyConsent(consent) {
+        if (typeof window.gtag !== "function") {
+          return;
+        }
+        window.gtag("consent", "update", {
+          ad_storage: consent.ad_storage,
+          analytics_storage: consent.analytics_storage,
+          ad_user_data: consent.ad_user_data,
+          ad_personalization: consent.ad_personalization
+        });
+      }
+
+      function acceptedConsent() {
+        return {
+          ad_storage: "granted",
+          analytics_storage: "granted",
+          ad_user_data: "granted",
+          ad_personalization: "granted"
+        };
+      }
+
+      function rejectedConsent() {
+        return {
+          ad_storage: "denied",
+          analytics_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied"
+        };
+      }
+
+      function hasStoredConsent() {
+        return !!safeParse(safeGet(CONSENT_KEY));
+      }
+
+      function removeBanner() {
+        var node = document.getElementById("skystat-consent-banner");
+        if (node && node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+      }
+
+      function renderBanner() {
+        removeBanner();
+
+        var lang = currentLang();
+        var txt = textSet(lang);
+
+        var wrapper = document.createElement("div");
+        wrapper.id = "skystat-consent-banner";
+        wrapper.setAttribute("role", "dialog");
+        wrapper.setAttribute("aria-live", "polite");
+        wrapper.style.position = "fixed";
+        wrapper.style.left = "16px";
+        wrapper.style.right = "16px";
+        wrapper.style.bottom = "16px";
+        wrapper.style.zIndex = "1000";
+        wrapper.style.maxWidth = "640px";
+        wrapper.style.margin = "0 auto";
+        wrapper.style.border = "1px solid #cbd5e1";
+        wrapper.style.borderRadius = "14px";
+        wrapper.style.background = "#ffffff";
+        wrapper.style.boxShadow = "0 10px 25px rgba(15,23,42,0.16)";
+        wrapper.style.padding = "14px";
+        wrapper.style.fontFamily = "system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+
+        var title = document.createElement("p");
+        title.textContent = txt.title;
+        title.style.margin = "0 0 6px 0";
+        title.style.fontSize = "14px";
+        title.style.fontWeight = "700";
+        title.style.color = "#0f172a";
+
+        var body = document.createElement("p");
+        body.textContent = txt.body;
+        body.style.margin = "0";
+        body.style.fontSize = "13px";
+        body.style.lineHeight = "1.5";
+        body.style.color = "#334155";
+
+        var actions = document.createElement("div");
+        actions.style.marginTop = "10px";
+        actions.style.display = "flex";
+        actions.style.flexWrap = "wrap";
+        actions.style.gap = "8px";
+
+        var rejectBtn = document.createElement("button");
+        rejectBtn.type = "button";
+        rejectBtn.textContent = txt.reject;
+        rejectBtn.style.border = "1px solid #cbd5e1";
+        rejectBtn.style.background = "#f8fafc";
+        rejectBtn.style.color = "#0f172a";
+        rejectBtn.style.borderRadius = "10px";
+        rejectBtn.style.padding = "8px 12px";
+        rejectBtn.style.fontSize = "13px";
+        rejectBtn.style.fontWeight = "600";
+        rejectBtn.style.cursor = "pointer";
+
+        var acceptBtn = document.createElement("button");
+        acceptBtn.type = "button";
+        acceptBtn.textContent = txt.accept;
+        acceptBtn.style.border = "1px solid #0f172a";
+        acceptBtn.style.background = "#0f172a";
+        acceptBtn.style.color = "#ffffff";
+        acceptBtn.style.borderRadius = "10px";
+        acceptBtn.style.padding = "8px 12px";
+        acceptBtn.style.fontSize = "13px";
+        acceptBtn.style.fontWeight = "600";
+        acceptBtn.style.cursor = "pointer";
+
+        rejectBtn.addEventListener("click", function () {
+          var consent = rejectedConsent();
+          applyConsent(consent);
+          safeSet(CONSENT_KEY, JSON.stringify({
+            v: 1,
+            choice: "reject",
+            consent: consent,
+            updatedAt: new Date().toISOString()
+          }));
+          removeBanner();
+        });
+
+        acceptBtn.addEventListener("click", function () {
+          var consent = acceptedConsent();
+          applyConsent(consent);
+          safeSet(CONSENT_KEY, JSON.stringify({
+            v: 1,
+            choice: "accept",
+            consent: consent,
+            updatedAt: new Date().toISOString()
+          }));
+          removeBanner();
+        });
+
+        actions.appendChild(rejectBtn);
+        actions.appendChild(acceptBtn);
+        wrapper.appendChild(title);
+        wrapper.appendChild(body);
+        wrapper.appendChild(actions);
+        document.body.appendChild(wrapper);
+      }
+
+      function renderManageButton() {
+        var existing = document.getElementById("skystat-consent-open");
+        if (existing) return;
+
+        var txt = textSet(currentLang());
+        var btn = document.createElement("button");
+        btn.id = "skystat-consent-open";
+        btn.type = "button";
+        btn.textContent = txt.manage;
+        btn.style.position = "fixed";
+        btn.style.right = "16px";
+        btn.style.bottom = "16px";
+        btn.style.zIndex = "999";
+        btn.style.border = "1px solid #cbd5e1";
+        btn.style.background = "#ffffff";
+        btn.style.color = "#0f172a";
+        btn.style.borderRadius = "999px";
+        btn.style.padding = "6px 10px";
+        btn.style.fontSize = "12px";
+        btn.style.cursor = "pointer";
+        btn.style.boxShadow = "0 6px 18px rgba(15,23,42,0.12)";
+        btn.style.display = safeGet(OPEN_KEY) === "0" ? "none" : "block";
+
+        btn.addEventListener("click", function () {
+          renderBanner();
+        });
+
+        document.body.appendChild(btn);
+      }
+
+      function initConsentRuntime() {
+        if (isGoogleFundingChoicesEnabled()) {
+          removeBanner();
+          removeManageButton();
+          loadGoogleFundingChoices();
+          return;
+        }
+
+        var saved = safeParse(safeGet(CONSENT_KEY));
+
+        if (saved && saved.consent) {
+          applyConsent(saved.consent);
+          renderManageButton();
+          return;
+        }
+
+        renderBanner();
+        renderManageButton();
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initConsentRuntime);
+      } else {
+        initConsentRuntime();
+      }
+    })();
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

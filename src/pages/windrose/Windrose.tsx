@@ -13,9 +13,8 @@ import {
 import { monthShortNames, toUTCInputFrom, utcInputToISO } from "@/lib/date";
 import type { BasicQueryParams } from "@/api/types/request/statistic/BasicQueryParams";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ResponsiveContainer } from "recharts";
-import { Separator } from "@/components/ui/separator";
 import ReactEChartsCore from "echarts-for-react/lib/core";
 import echarts from "@/utils/echarts";
 import { buildEchartOptions, buildWindroseDataset } from "./WindroseHelper";
@@ -28,12 +27,17 @@ import { WindroseKpiGrid } from "./WindroseKpiGrid";
 import { usePageScope } from "@/context/scope/usePageScope";
 import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 import { LoadingWrapper } from "@/components/common/LoadingWrapper";
+import AppFooter from "@/components/common/AppFooter";
+import { useTranslation } from "react-i18next";
+import AdSlot from "@/components/ads/AdSlot";
 
 export default function Windrose() {
+  const { t } = useTranslation();
   const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({ pageId: "windrose", defaults: { ...PAGE_DEFAULTS.windrose } });
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
   const [loading, setLoading] = useState(false);
+  const didAutoFetchRef = useRef(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
@@ -80,6 +84,14 @@ export default function Windrose() {
     }
   }
 
+  useEffect(() => {
+    if (didAutoFetchRef.current) {
+      return;
+    }
+    didAutoFetchRef.current = true;
+    void handleFetch();
+  }, []);
+
   const [monthSel, setMonthSel] = useState<number>(1);
   const [view, setView] = useState<"graph" | "table">("graph");
   const dataset = useMemo(() => buildWindroseDataset(data), [data]);
@@ -88,9 +100,14 @@ export default function Windrose() {
     [dataset, monthSel]
   );
 
-  const status: PageTrailStatus = data && data.totalCount > 0
-    ? "summary"
-    : error === null ? "no-data" : "error";
+  const status: PageTrailStatus =
+    !isFetched
+      ? "preview"
+      : data && data.totalCount > 0
+      ? "summary"
+      : error === null
+      ? "no-data"
+      : "error";
 
   const hasData =
     dataset.directionBins.length > 0 &&
@@ -124,8 +141,20 @@ export default function Windrose() {
         inputType="number"
       />
 
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <PageTrailstatusBar page="Windrose" status={status} hint="[%] gusts not included" />
+      <main className="bg-slate-50">
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-8">
+        <PageTrailstatusBar page={t("analysis.pages.windrose")} status={status} hint={t("analysis.windrose.gustHint")} />
+
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+          <h3 className="mb-2 text-base font-semibold text-slate-900">{t("analysis.guide.title")}</h3>
+          <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
+            <li>{t("analysis.guide.windrose.1")}</li>
+            <li>{t("analysis.guide.windrose.2")}</li>
+            <li>{t("analysis.guide.windrose.3", { count: dataset.directionBins.length })}</li>
+            <li>{t("analysis.guide.windrose.4")}</li>
+            <li>{t("analysis.guide.windrose.5")}</li>
+          </ul>
+        </section>
 
         <LoadingWrapper loading={loading || isFetching}>
           <WindroseKpiGrid kpis={kpis} />
@@ -141,10 +170,10 @@ export default function Windrose() {
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <LoadingWrapper loading={loading || isFetching}>
-          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+          <Card className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white/80 shadow-sm">
             <CardHeader className="pb-2 space-y-2">
               <CardTitle className="text-base">
-                Monthly Observed
+                {t("analysis.windrose.monthlyDistTitle")}
               </CardTitle>
               <div className="flex items-center gap-2">
                 <Select
@@ -152,7 +181,7 @@ export default function Windrose() {
                   onValueChange={(v) => setMonthSel(Number(v))}
                 >
                   <SelectTrigger className="h-8 w-28">
-                    <SelectValue placeholder="month" />
+                    <SelectValue placeholder={t("analysis.common.month")} />
                   </SelectTrigger>
                   <SelectContent>
                     {monthShortNames.map((m, i) => (
@@ -168,14 +197,14 @@ export default function Windrose() {
                     variant={view === "graph" ? "default" : "secondary"}
                     onClick={() => setView("graph")}
                   >
-                    Graph
+                    {t("analysis.common.graph")}
                   </Button>
                   <Button
                     size="sm"
                     variant={view === "table" ? "default" : "secondary"}
                     onClick={() => setView("table")}
                   >
-                    Table
+                    {t("analysis.common.table")}
                   </Button>
                 </div>
               </div>
@@ -196,7 +225,7 @@ export default function Windrose() {
                           lazyUpdate={true}
                         />
                       ) : (
-                        <Hint text="No data to display." />
+                        <Hint text={t("analysis.windrose.noData")} />
                       )}
                     </div>
                   </ResponsiveContainer>
@@ -213,9 +242,9 @@ export default function Windrose() {
                       <col className="w-1/7" />
                       <col className="w-1/7" />
                     </colgroup>
-                    <thead className="text-left text-muted-foreground border-b">
-                      <tr>
-                        <th className="py-2 pr-4 text-right">Direction</th>
+                    <thead className="bg-slate-50 text-left text-slate-600">
+                      <tr className="border-b border-slate-200">
+                        <th className="py-2 pr-4 text-right">{t("analysis.windrose.direction")}</th>
                         {dataset.speedBins
                           .filter((s) => s.toUpperCase() !== "CALM")
                           .map((s) => (
@@ -225,11 +254,11 @@ export default function Windrose() {
                           ))}
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="tabular-nums divide-y divide-slate-100/80">
                       {dataset.directionBins.map((r, i) => (
                         <tr
                           key={r}
-                          className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                          className="odd:bg-white even:bg-slate-50/60 transition-colors hover:bg-slate-100/60"
                         >
                           <td className="py-2 pr-4 font-medium text-right">
                             {r}
@@ -254,34 +283,11 @@ export default function Windrose() {
           </Card>
         </LoadingWrapper>
 
-        <Separator />
-        {/* Next steps */}
-        <div className="text-sm text-muted-foreground leading-6">
-          <div className="font-medium text-foreground mb-1">
-            Quick Guide — Windrose
-          </div>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>
-              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
-              inclusive, To exclusive). Click <strong>Search</strong>.
-            </li>
-            <li>
-              The <strong>polar chart</strong> stacks direction-wise <strong>frequency (%)</strong> by <strong>speed bins (kt)</strong>; the center shows <strong>Calm %</strong>. <em className="not-italic">(Gusts are not included)</em>
-            </li>
-            <li>
-              Uses <strong>{dataset.directionBins.length} cardinal directions</strong>.
-            </li>
-            <li>
-              Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
-              <strong>total/year</strong> and <strong>month</strong> selectors.
-            </li>
-            <li>
-              Tip: Change the code or date range to compare scenarios; all
-              numbers reflect your selected range & filters.
-            </li>
-          </ul>
+        <AdSlot slotKey="windrose_bottom" minHeight={260} />
+
         </div>
       </main>
+      <AppFooter />
     </>
   );
 }

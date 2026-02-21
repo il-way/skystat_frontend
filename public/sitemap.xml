@@ -2,56 +2,105 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
    <url>
       <loc>https://sky-stat.com/</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>daily</changefreq>
       <priority>1.0</priority>
    </url>
 
    <url>
+      <loc>https://sky-stat.com/about</loc>
+      <lastmod>2026-02-21</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.7</priority>
+   </url>
+
+   <url>
+      <loc>https://sky-stat.com/guide</loc>
+      <lastmod>2026-02-21</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+
+   <url>
+      <loc>https://sky-stat.com/faq</loc>
+      <lastmod>2026-02-21</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.7</priority>
+   </url>
+
+   <url>
+      <loc>https://sky-stat.com/privacy</loc>
+      <lastmod>2026-02-21</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+
+   <url>
+      <loc>https://sky-stat.com/contact</loc>
+      <lastmod>2026-02-21</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+
+   <url>
+      <loc>https://sky-stat.com/terms</loc>
+      <lastmod>2026-02-21</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.6</priority>
+   </url>
+
+   <url>
+      <loc>https://sky-stat.com/report/RKSI</loc>
+      <lastmod>2026-02-21</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+
+   <url>
       <loc>https://sky-stat.com/dashboard</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
 
    <url>
       <loc>https://sky-stat.com/visibility</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
 
    <url>
       <loc>https://sky-stat.com/wind</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
 
    <url>
       <loc>https://sky-stat.com/altimeter</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
 
    <url>
       <loc>https://sky-stat.com/weather</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
 
    <url>
       <loc>https://sky-stat.com/temperature</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
 
    <url>
       <loc>https://sky-stat.com/windrose</loc>
-      <lastmod>2025-11-28</lastmod>
+      <lastmod>2026-02-21</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>

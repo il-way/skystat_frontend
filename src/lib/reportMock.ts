@@ -68,7 +68,7 @@ const REPORTS: Record<string, ReportMock> = {
       { month: "2023-12", days: 31 },
     ],
     disclaimer:
-      "본 보고서는 공개 시연용 목업 데이터입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
+      "본 보고서는 공개 기상 관측 데이터를 기반으로 한 통계 요약입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
   },
   KJFK: {
     icao: "KJFK",
@@ -113,7 +113,7 @@ const REPORTS: Record<string, ReportMock> = {
       { month: "2023-12", days: 31 },
     ],
     disclaimer:
-      "본 보고서는 공개 시연용 목업 데이터입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
+      "본 보고서는 공개 기상 관측 데이터를 기반으로 한 통계 요약입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
   },
   EGLL: {
     icao: "EGLL",
@@ -158,7 +158,7 @@ const REPORTS: Record<string, ReportMock> = {
       { month: "2023-12", days: 31 },
     ],
     disclaimer:
-      "본 보고서는 공개 시연용 목업 데이터입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
+      "본 보고서는 공개 기상 관측 데이터를 기반으로 한 통계 요약입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
   },
   RJTT: {
     icao: "RJTT",
@@ -203,7 +203,7 @@ const REPORTS: Record<string, ReportMock> = {
       { month: "2023-12", days: 31 },
     ],
     disclaimer:
-      "본 보고서는 공개 시연용 목업 데이터입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
+      "본 보고서는 공개 기상 관측 데이터를 기반으로 한 통계 요약입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
   },
   WSSS: {
     icao: "WSSS",
@@ -248,7 +248,7 @@ const REPORTS: Record<string, ReportMock> = {
       { month: "2023-12", days: 31 },
     ],
     disclaimer:
-      "본 보고서는 공개 시연용 목업 데이터입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
+      "본 보고서는 공개 기상 관측 데이터를 기반으로 한 통계 요약입니다. 실제 운항 의사결정에는 공식 기상 브리핑과 운항 규정을 함께 확인해야 합니다.",
   },
 };
 
@@ -259,3 +259,4 @@ export function getReportMock(icao: string) {
 export function getReportSamples(limit = 3) {
   return Object.values(REPORTS).slice(0, limit);
 }
+

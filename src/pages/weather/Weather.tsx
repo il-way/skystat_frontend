@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { groupHourly, groupMonthly } from "@/lib/count";
 import { monthShortNames, utcInputToISO } from "@/lib/date";
 import type { WeatherCondition } from "@/api/types/request/common/Condition";
@@ -19,7 +18,7 @@ import type { ThresholdKpiValues } from "@/pages/threshold/types/ThresholdKpiVal
 import type { WeatherDescriptor } from "@/pages/weather/types/WeatherDescriptor";
 import type { WeatherPhenomenon } from "@/pages/weather/types/WeatherPhenomenon";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -36,8 +35,12 @@ import PageTrailstatusBar from "@/components/common/PageTrailstatusBar";
 import { usePageScope } from "@/context/scope/usePageScope";
 import { PAGE_DEFAULTS } from "@/context/scope/pageDefaults";
 import { LoadingWrapper } from "@/components/common/LoadingWrapper";
+import AppFooter from "@/components/common/AppFooter";
+import { useTranslation } from "react-i18next";
+import AdSlot from "@/components/ads/AdSlot";
 
 export default function Weather() {
+  const { t } = useTranslation();
   const targetCodes = ["FZ", "SN", "PL", "FG", "TS", "RA", "WS"] as (
     | WeatherDescriptor
     | WeatherPhenomenon
@@ -49,6 +52,7 @@ export default function Weather() {
   const [errDetails, setErrDetails] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const didAutoFetchRef = useRef(false);
 
   const basicQueryParams: BasicQueryParams = useMemo(
     () => ({
@@ -101,6 +105,14 @@ export default function Weather() {
     }
   }
 
+  useEffect(() => {
+    if (didAutoFetchRef.current) {
+      return;
+    }
+    didAutoFetchRef.current = true;
+    void handleFetch();
+  }, []);
+
   const monthAgg = groupMonthly(data);
   const hourAgg = groupHourly(data);
 
@@ -124,9 +136,14 @@ export default function Weather() {
   const [mtView, setMtView] = useState<"graph" | "table">("graph");
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
   
-  const status: PageTrailStatus = data && data.totalCount > 0
+  const status: PageTrailStatus =
+    !isFetched
+      ? "preview"
+      : data && data.totalCount > 0
       ? "summary"
-      : error === null ? "no-data" : "error";
+      : error === null
+      ? "no-data"
+      : "error";
 
   const monthSeries =
     yearSel === "total"
@@ -151,34 +168,44 @@ export default function Weather() {
         isFetching={isFetching}
         onFetch={handleFetch}
         rightSlot={
-          <div className="flex items-end gap-3 mr-3">
-            <div className="flex">
-              <div className="flex items-center text-sm px-2">Weather</div>
-              <Select
-                value={target}
-                onValueChange={(v: WeatherDescriptor | WeatherPhenomenon) => {
-                  setTarget(v);
-                }}
-              >
-                <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="target" />
-                </SelectTrigger>
-                <SelectContent>
-                  {targetCodes.map((code) => (
-                    <SelectItem key={code} value={code}>
-                      {code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="w-full lg:w-36 lg:shrink-0">
+            <label className="mb-1 block whitespace-nowrap text-xs text-slate-600">{t("analysis.filters.weatherCode")}</label>
+            <Select
+              value={target}
+              onValueChange={(v: WeatherDescriptor | WeatherPhenomenon) => {
+                setTarget(v);
+              }}
+            >
+              <SelectTrigger className="h-10 min-h-10 w-full rounded-xl border border-slate-300 bg-white py-1 text-slate-900">
+                <SelectValue placeholder={t("analysis.filters.weatherCodePlaceholder")} />
+              </SelectTrigger>
+              <SelectContent>
+                {targetCodes.map((code) => (
+                  <SelectItem key={code} value={code}>
+                    {code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         }
       />
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <main className="bg-slate-50">
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-8">
         <PageTrailstatusBar page="Weather" status={status} />
+
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+          <h3 className="mb-2 text-base font-semibold text-slate-900">{t("analysis.guide.title")}</h3>
+          <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
+            <li>{t("analysis.guide.weather.1")}</li>
+            <li>{t("analysis.guide.common.2")}</li>
+            <li>{t("analysis.guide.weather.3")}</li>
+            <li>{t("analysis.guide.common.4")}</li>
+            <li>{t("analysis.guide.weather.5")}</li>
+          </ul>
+        </section>
 
         <LoadingWrapper loading={loading || isFetching}>
           <ThresholdKpiCardGrid kpis={kpis} />
@@ -194,9 +221,9 @@ export default function Weather() {
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <LoadingWrapper loading={loading || isFetching}>
-          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+          <Card className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white/80 shadow-sm">
             <CardHeader className="pb-2 space-y-2">
-              <CardTitle className="text-base">Monthly Observed Days</CardTitle>
+              <CardTitle className="text-base">{t("analysis.monthly.title")}</CardTitle>
               <div className="flex items-center gap-2">
                 <Select
                   value={String(yearSel)}
@@ -205,7 +232,7 @@ export default function Weather() {
                   }
                 >
                   <SelectTrigger className="h-8 w-28">
-                    <SelectValue placeholder="year" />
+                    <SelectValue placeholder={t("analysis.common.year")} />
                   </SelectTrigger>
                   <SelectContent>
                     {monthAgg.years.map((y) => (
@@ -213,7 +240,7 @@ export default function Weather() {
                         {y}
                       </SelectItem>
                     ))}
-                    <SelectItem value="total">total</SelectItem>
+                    <SelectItem value="total">{t("analysis.common.total")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
@@ -222,14 +249,14 @@ export default function Weather() {
                     variant={mtView === "graph" ? "default" : "secondary"}
                     onClick={() => setMtView("graph")}
                   >
-                    Graph
+                    {t("analysis.common.graph")}
                   </Button>
                   <Button
                     size="sm"
                     variant={mtView === "table" ? "default" : "secondary"}
                     onClick={() => setMtView("table")}
                   >
-                    Table
+                    {t("analysis.common.table")}
                   </Button>
                 </div>
               </div>
@@ -257,24 +284,24 @@ export default function Weather() {
                       <col className="w-1/2" />
                       <col className="w-1/2" />
                     </colgroup>
-                    <thead className="text-left text-muted-foreground border-b">
-                      <tr>
-                        <th className="py-2 pr-4">Month</th>
-                        <th className="py-2 pr-4">Count</th>
+                    <thead className="bg-slate-50 text-left text-slate-600">
+                      <tr className="border-b border-slate-200">
+                        <th className="py-2 pr-4">{t("analysis.common.month")}</th>
+                        <th className="py-2 pr-4">{t("analysis.common.count")}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="tabular-nums divide-y divide-slate-100/80">
                       {monthSeries.map((r) => (
                         <tr
                           key={r.monthShortName}
-                          className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                          className="odd:bg-white even:bg-slate-50/60 transition-colors hover:bg-slate-100/60"
                         >
                           <td className="py-2 pl-2 pr-4">{r.monthShortName}</td>
                           <td className="py-2 pl-2 pr-4">{r.count}</td>
                         </tr>
                       ))}
                       <tr className="font-medium">
-                        <td className="py-2 pl-2 pr-4">TOTAL</td>
+                        <td className="py-2 pl-2 pr-4">{t("analysis.common.totalUpper")}</td>
                         <td className="py-2 pl-2 pr-4">
                           {monthSeries.reduce((a, b) => a + b.count, 0)}
                         </td>
@@ -289,9 +316,9 @@ export default function Weather() {
 
         {/* ==== (2) 시간별 관측횟수: 연/월 선택 그래프/테이블 + 합계 지원 ==== */}
         <LoadingWrapper loading={loading || isFetching}>
-          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+          <Card className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white/80 shadow-sm">
             <CardHeader className="pb-2 space-y-2">
-              <CardTitle className="text-base">Hourly Observed Days</CardTitle>
+              <CardTitle className="text-base">{t("analysis.hourly.title")}</CardTitle>
               <div className="flex items-center gap-2">
                 <Select
                   value={String(yearSel)}
@@ -300,7 +327,7 @@ export default function Weather() {
                   }
                 >
                   <SelectTrigger className="h-8 w-28">
-                    <SelectValue placeholder="year" />
+                    <SelectValue placeholder={t("analysis.common.year")} />
                   </SelectTrigger>
                   <SelectContent>
                     {hourAgg.years.map((y) => (
@@ -308,7 +335,7 @@ export default function Weather() {
                         {y}
                       </SelectItem>
                     ))}
-                    <SelectItem value="total">total</SelectItem>
+                    <SelectItem value="total">{t("analysis.common.total")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select
@@ -316,7 +343,7 @@ export default function Weather() {
                   onValueChange={(v) => setMonthSel(Number(v))}
                 >
                   <SelectTrigger className="h-8 w-28">
-                    <SelectValue placeholder="month" />
+                    <SelectValue placeholder={t("analysis.common.month")} />
                   </SelectTrigger>
                   <SelectContent>
                     {monthShortNames.map((m, i) => (
@@ -332,14 +359,14 @@ export default function Weather() {
                     variant={hrView === "graph" ? "default" : "secondary"}
                     onClick={() => setHrView("graph")}
                   >
-                    Graph
+                    {t("analysis.common.graph")}
                   </Button>
                   <Button
                     size="sm"
                     variant={hrView === "table" ? "default" : "secondary"}
                     onClick={() => setHrView("table")}
                   >
-                    Table
+                    {t("analysis.common.table")}
                   </Button>
                 </div>
               </div>
@@ -371,17 +398,17 @@ export default function Weather() {
                       <col className="w-1/2" />
                       <col className="w-1/2" />
                     </colgroup>
-                    <thead className="text-left text-muted-foreground border-b">
-                      <tr>
-                        <th className="py-2 pl-2 pr-4">Hour</th>
-                        <th className="py-2 pl-2 pr-4">Count</th>
+                    <thead className="bg-slate-50 text-left text-slate-600">
+                      <tr className="border-b border-slate-200">
+                        <th className="py-2 pl-2 pr-4">{t("analysis.common.hour")}</th>
+                        <th className="py-2 pl-2 pr-4">{t("analysis.common.count")}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="tabular-nums divide-y divide-slate-100/80">
                       {hourSeries.map((r) => (
                         <tr
                           key={r.hour}
-                          className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                          className="odd:bg-white even:bg-slate-50/60 transition-colors hover:bg-slate-100/60"
                         >
                           <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
                           <td className="py-2 pl-2 pr-4">{r.count}</td>
@@ -395,39 +422,11 @@ export default function Weather() {
           </Card>
         </LoadingWrapper>
 
-        <Separator />
-        {/* Next steps */}
-        <div className="text-sm text-muted-foreground leading-6">
-          <div className="font-medium text-foreground mb-1">
-            Quick Guide — Weather
-          </div>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>
-              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
-              inclusive, To exclusive). Select <strong>Weather code</strong>{" "}
-              (e.g., SN, TS, FG). Click <strong>Search</strong>.
-            </li>
-            <li>
-              Top cards summarize <strong>Sample Size</strong>,{" "}
-              <strong>Total Observed Days</strong>, and{" "}
-              <strong>most-frequent month/hour</strong>.
-            </li>
-            <li>
-              <strong>Monthly</strong> shows days per month where the code
-              appears. <strong>Hourly</strong> shows counts by{" "}
-              <strong>UTC</strong> hour for the selected year/month.
-            </li>
-            <li>
-              Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
-              <strong>total/year</strong> and <strong>month</strong> selectors.
-            </li>
-            <li>
-              Tip: Change the code or date range to compare scenarios; all
-              numbers reflect your selected range & filters.
-            </li>
-          </ul>
+        <AdSlot slotKey="weather_bottom" minHeight={260} />
+
         </div>
       </main>
+      <AppFooter />
     </>
   );
 }

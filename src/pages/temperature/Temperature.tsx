@@ -9,11 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { monthShortNames } from "@/lib/date";
 import type { TemperatureStatisticQueryParams } from "@/api/types/request/statistic/TemperatureStatisticQueryParams";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -33,6 +32,9 @@ import { usePageScope } from "@/context/scope/usePageScope";
 import SimpleAlertModal from "@/components/modal/SimpleAlertModal";
 import { LoadingWrapper } from "@/components/common/LoadingWrapper";
 import { getErrorMessage } from "@/lib/page";
+import AppFooter from "@/components/common/AppFooter";
+import { useTranslation } from "react-i18next";
+import AdSlot from "@/components/ads/AdSlot";
 
 const TEMP_COLORS = {
   maxAvg: "#ef4444", // red   — mean T_max
@@ -41,6 +43,7 @@ const TEMP_COLORS = {
 } as const;
 
 export default function Temperature() {
+  const { t } = useTranslation();
   const { icao, from, to, setIcao, setFrom, setTo } = usePageScope({
     pageId: "temperature",
     defaults: { ...PAGE_DEFAULTS.temperature },
@@ -48,6 +51,7 @@ export default function Temperature() {
   const [errOpen, setErrOpen] = useState(false);
   const [errDetails, setErrDetails] = useState("");
   const [loading, setLoading] = useState(false);
+  const didAutoFetchRef = useRef(false);
 
   const queryParams: TemperatureStatisticQueryParams = useMemo(
     () => ({
@@ -89,6 +93,14 @@ export default function Temperature() {
     }
   }
 
+  useEffect(() => {
+    if (didAutoFetchRef.current) {
+      return;
+    }
+    didAutoFetchRef.current = true;
+    void handleFetch();
+  }, []);
+
   const yearAgg = groupYearly(data);
   const monthAgg = groupMonthly(data);
   const hourAgg = groupHourly(data);
@@ -99,7 +111,9 @@ export default function Temperature() {
   const [hrView, setHrView] = useState<"graph" | "table">("graph");
 
   const status =
-    data && data.totalCount > 0
+    !isFetched
+      ? "preview"
+      : data && data.totalCount > 0
       ? "summary"
       : error === null
       ? "no-data"
@@ -153,8 +167,24 @@ export default function Temperature() {
       />
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <PageTrailstatusBar page="Temperature" status={status} hint="[℃]" />
+      <main className="bg-slate-50">
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-8">
+        <PageTrailstatusBar page={t("analysis.pages.temperature")} status={status} hint="[℃]" />
+
+        <section className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+          <h3 className="mb-2 text-base font-semibold text-slate-900">{t("analysis.guide.title")}</h3>
+          <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600">
+            <li>{t("analysis.guide.temperature.1")}</li>
+            <li>{t("analysis.guide.temperature.2")}</li>
+            <li>{t("analysis.guide.temperature.3")}</li>
+            <li>{t("analysis.guide.temperature.4")}</li>
+            <li>{t("analysis.guide.temperature.5")}</li>
+            <li className="list-none">
+              <em>{t("analysis.guide.temperature.overline")}</em>
+            </li>
+            <li>{t("analysis.guide.common.4")}</li>
+          </ul>
+        </section>
 
         <LoadingWrapper loading={loading || isFetching}>
           <TemperatureKpiGrid kpis={kpis} />
@@ -170,9 +200,9 @@ export default function Temperature() {
 
         {/* ==== (1) 월별 관측일수: 연도별 or 합계 그래프/테이블 ==== */}
         <LoadingWrapper loading={loading || isFetching}>
-          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+          <Card className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white/80 shadow-sm">
             <CardHeader className="pb-2 space-y-2">
-              <CardTitle className="text-base">Monthly Observed Days</CardTitle>
+              <CardTitle className="text-base">{t("analysis.monthly.title")}</CardTitle>
               <div className="flex items-center gap-2">
                 <Select
                   value={String(yearSel)}
@@ -181,7 +211,7 @@ export default function Temperature() {
                   }
                 >
                   <SelectTrigger className="h-8 w-28">
-                    <SelectValue placeholder="year" />
+                    <SelectValue placeholder={t("analysis.common.year")} />
                   </SelectTrigger>
                   <SelectContent>
                     {monthAgg.years.map((y) => (
@@ -189,7 +219,7 @@ export default function Temperature() {
                         {y}
                       </SelectItem>
                     ))}
-                    <SelectItem value="total">total</SelectItem>
+                    <SelectItem value="total">{t("analysis.common.total")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="ml-auto flex gap-2">
@@ -198,14 +228,14 @@ export default function Temperature() {
                     variant={mtView === "graph" ? "default" : "secondary"}
                     onClick={() => setMtView("graph")}
                   >
-                    Graph
+                    {t("analysis.common.graph")}
                   </Button>
                   <Button
                     size="sm"
                     variant={mtView === "table" ? "default" : "secondary"}
                     onClick={() => setMtView("table")}
                   >
-                    Table
+                    {t("analysis.common.table")}
                   </Button>
                 </div>
               </div>
@@ -227,7 +257,7 @@ export default function Temperature() {
                     <Line
                       type="monotone"
                       dataKey="dailyMaxAvg"
-                      name="mean T_max"
+                      name={t("analysis.temperature.chart.legend.meanTMax")}
                       stroke={TEMP_COLORS.maxAvg}
                       strokeWidth={2}
                       dot={{
@@ -245,7 +275,7 @@ export default function Temperature() {
                     <Line
                       type="monotone"
                       dataKey="dailyMeanAvg"
-                      name="mean T"
+                      name={t("analysis.temperature.chart.legend.meanT")}
                       stroke={TEMP_COLORS.mean}
                       strokeWidth={2}
                       dot={{
@@ -263,7 +293,7 @@ export default function Temperature() {
                     <Line
                       type="monotone"
                       dataKey="dailyMinAvg"
-                      name="mean T_min"
+                      name={t("analysis.temperature.chart.legend.meanTMin")}
                       stroke={TEMP_COLORS.minAvg}
                       strokeWidth={2}
                       dot={{
@@ -292,21 +322,21 @@ export default function Temperature() {
                       <col className="w-1/6" />
                     </colgroup>
 
-                    <thead className="text-left text-muted-foreground border-b">
-                      <tr>
-                        <th className="py-2 pr-4">Month</th>
-                        <th className="py-2 pr-4 overline">T</th>
-                        <th className="py-2 pr-4 overline">T_max</th>
-                        <th className="py-2 pr-4 overline">T_min</th>
-                        <th className="py-2 pr-4">T_max</th>
-                        <th className="py-2 pr-4">T_min</th>
+                    <thead className="bg-slate-50 text-left text-slate-600">
+                      <tr className="border-b border-slate-200">
+                        <th className="py-2 pr-4">{t("analysis.common.month")}</th>
+                        <th className="py-2 pr-4 overline">{t("analysis.temperature.table.t")}</th>
+                        <th className="py-2 pr-4 overline">{t("analysis.temperature.table.tMax")}</th>
+                        <th className="py-2 pr-4 overline">{t("analysis.temperature.table.tMin")}</th>
+                        <th className="py-2 pr-4">{t("analysis.temperature.table.tMax")}</th>
+                        <th className="py-2 pr-4">{t("analysis.temperature.table.tMin")}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="tabular-nums divide-y divide-slate-100/80">
                       {monthTable.map((r) => (
                         <tr
                           key={r.month}
-                          className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                          className="odd:bg-white even:bg-slate-50/60 transition-colors hover:bg-slate-100/60"
                         >
                           <td className="py-2 pl-2 pr-4">{r.monthShotrName}</td>
                           <td className="py-2 pl-2 pr-4">{r.mean}</td>
@@ -326,9 +356,9 @@ export default function Temperature() {
 
         {/* ==== (2) 시간별 관측횟수: 연/월 선택 그래프/테이블 + 합계 지원 ==== */}
         <LoadingWrapper loading={loading || isFetching}>
-          <Card className="rounded-2xl w-full min-w-0 overflow-hidden">
+          <Card className="w-full min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white/80 shadow-sm">
           <CardHeader className="pb-2 space-y-2">
-            <CardTitle className="text-base">Hourly Observed Days</CardTitle>
+            <CardTitle className="text-base">{t("analysis.hourly.title")}</CardTitle>
             <div className="flex items-center gap-2">
               <Select
                 value={String(yearSel)}
@@ -337,7 +367,7 @@ export default function Temperature() {
                 }
               >
                 <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="year" />
+                  <SelectValue placeholder={t("analysis.common.year")} />
                 </SelectTrigger>
                 <SelectContent>
                   {hourAgg.years.map((y) => (
@@ -345,7 +375,7 @@ export default function Temperature() {
                       {y}
                     </SelectItem>
                   ))}
-                  <SelectItem value="total">total</SelectItem>
+                  <SelectItem value="total">{t("analysis.common.total")}</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -353,7 +383,7 @@ export default function Temperature() {
                 onValueChange={(v) => setMonthSel(Number(v))}
               >
                 <SelectTrigger className="h-8 w-28">
-                  <SelectValue placeholder="month" />
+                  <SelectValue placeholder={t("analysis.common.month")} />
                 </SelectTrigger>
                 <SelectContent>
                   {monthShortNames.map((m, i) => (
@@ -369,14 +399,14 @@ export default function Temperature() {
                   variant={hrView === "graph" ? "default" : "secondary"}
                   onClick={() => setHrView("graph")}
                 >
-                  Graph
+                  {t("analysis.common.graph")}
                 </Button>
                 <Button
                   size="sm"
                   variant={hrView === "table" ? "default" : "secondary"}
                   onClick={() => setHrView("table")}
                 >
-                  Table
+                  {t("analysis.common.table")}
                 </Button>
               </div>
             </div>
@@ -399,7 +429,7 @@ export default function Temperature() {
                     }
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="mean" name="mean T" dot />
+                  <Line type="monotone" dataKey="mean" name={t("analysis.temperature.chart.legend.meanT")} dot />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -411,19 +441,19 @@ export default function Temperature() {
                     <col className="w-1/4" />
                     <col className="w-1/4" />
                   </colgroup>
-                  <thead className="text-left text-muted-foreground border-b">
-                    <tr>
-                      <th className="py-2 pl-2 pr-4">Hour</th>
-                      <th className="py-2 pl-2 pr-4 overline">T</th>
-                      <th className="py-2 pl-2 pr-4">T_max</th>
-                      <th className="py-2 pl-2 pr-4">T_min</th>
+                  <thead className="bg-slate-50 text-left text-slate-600">
+                    <tr className="border-b border-slate-200">
+                      <th className="py-2 pl-2 pr-4">{t("analysis.common.hour")}</th>
+                      <th className="py-2 pl-2 pr-4 overline">{t("analysis.temperature.table.t")}</th>
+                      <th className="py-2 pl-2 pr-4">{t("analysis.temperature.table.tMax")}</th>
+                      <th className="py-2 pl-2 pr-4">{t("analysis.temperature.table.tMin")}</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="tabular-nums divide-y divide-slate-100/80">
                     {hourTable.map((r) => (
                       <tr
                         key={r.hour}
-                        className="border-b last:border-none odd:bg-muted/30 hover:bg-muted/40 transition-colors"
+                        className="odd:bg-white even:bg-slate-50/60 transition-colors hover:bg-slate-100/60"
                       >
                         <td className="py-2 pl-2 pr-4">{r.hour}Z</td>
                         <td className="py-2 pl-2 pr-4">{r.mean}</td>
@@ -439,47 +469,11 @@ export default function Temperature() {
           </Card>
         </LoadingWrapper>
 
-        <Separator />
-        {/* Next steps */}
-        <div className="text-sm text-muted-foreground leading-6">
-          <div className="font-medium text-foreground mb-1">
-            Quick Guide — Temperature
-          </div>
-          <ul className="list-disc pl-5 space-y-1">
-            <li>
-              Set <strong>ICAO</strong> and <strong>UTC range</strong> (From
-              inclusive, To exclusive). Click <strong>Search</strong>.
-            </li>
-            <li>
-              Top cards show <strong>Sample Size</strong>,{" "}
-              <strong>Annual Mean (°C)</strong>, and observed{" "}
-              <strong>Max/Min (°C)</strong> within the selected range.
-            </li>
-            <li>
-              <strong>Monthly (graph)</strong>: lines for{" "}
-              <strong>mean T</strong>, <strong>mean T_max</strong>,{" "}
-              <strong>mean T_min</strong> by month (°C).{" "}
-            </li>
-            <li>
-              <strong>Hourly (graph)</strong>: <strong>mean T</strong> by{" "}
-              <strong>UTC</strong> hour for the selected year/month.
-            </li>
-            <li>
-              <strong>Table</strong>: yearly block lists{" "}
-              <strong>mean T / mean T_max / mean T_min</strong> per year and a{" "}
-              <strong>total</strong> row; monthly block lists the same per
-              month.
-            </li>
-            <li className="list-none">
-              <em>Overbars indicate “mean”.</em>
-            </li>
-            <li>
-              Toggle <strong>Graph/Table</strong> anytime; refine with{" "}
-              <strong>total/year</strong> and <strong>month</strong> selectors.
-            </li>
-          </ul>
+        <AdSlot slotKey="temperature_bottom" minHeight={260} />
+
         </div>
       </main>
+      <AppFooter />
     </>
   );
 }
